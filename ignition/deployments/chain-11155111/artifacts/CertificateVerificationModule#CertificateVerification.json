@@ -1,0 +1,96 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "CertificateVerification",
+  "sourceName": "contracts/CertificateVerification.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "certificateHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "CertificateRegistered",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "certificateHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "registerCertificate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "verifiedCertificates",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "certificateHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "verifyCertificate",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600e575f5ffd5b505f80546001600160a01b031916331790556102298061002d5f395ff3fe608060405234801561000f575f5ffd5b506004361061004a575f3560e01c8063850c17681461004e5780638da5cb5b14610085578063f101dce8146100af578063f491334c146100c4575b5f5ffd5b61007061005c3660046101dc565b5f9081526001602052604090205460ff1690565b60405190151581526020015b60405180910390f35b5f54610097906001600160a01b031681565b6040516001600160a01b03909116815260200161007c565b6100c26100bd3660046101dc565b6100e6565b005b6100706100d23660046101dc565b60016020525f908152604090205460ff1681565b5f546001600160a01b031633146101445760405162461bcd60e51b815260206004820152601760248201527f4f6e6c79206f776e65722063616e20726567697374657200000000000000000060448201526064015b60405180910390fd5b5f8181526001602052604090205460ff16156101975760405162461bcd60e51b8152602060048201526012602482015271105b1c9958591e481c9959da5cdd195c995960721b604482015260640161013b565b5f818152600160208190526040808320805460ff19169092179091555182917f5585ea694d068c57c1376a363db81e42bc4e413fd0912df78194cac13a582dff91a250565b5f602082840312156101ec575f5ffd5b503591905056fea26469706673582212203ceaaab3e7af2875d2d61615c267ccf42bf38fee684d7b1497e38bdc829adb6864736f6c63430008220033",
+  "deployedBytecode": "0x608060405234801561000f575f5ffd5b506004361061004a575f3560e01c8063850c17681461004e5780638da5cb5b14610085578063f101dce8146100af578063f491334c146100c4575b5f5ffd5b61007061005c3660046101dc565b5f9081526001602052604090205460ff1690565b60405190151581526020015b60405180910390f35b5f54610097906001600160a01b031681565b6040516001600160a01b03909116815260200161007c565b6100c26100bd3660046101dc565b6100e6565b005b6100706100d23660046101dc565b60016020525f908152604090205460ff1681565b5f546001600160a01b031633146101445760405162461bcd60e51b815260206004820152601760248201527f4f6e6c79206f776e65722063616e20726567697374657200000000000000000060448201526064015b60405180910390fd5b5f8181526001602052604090205460ff16156101975760405162461bcd60e51b8152602060048201526012602482015271105b1c9958591e481c9959da5cdd195c995960721b604482015260640161013b565b5f818152600160208190526040808320805460ff19169092179091555182917f5585ea694d068c57c1376a363db81e42bc4e413fd0912df78194cac13a582dff91a250565b5f602082840312156101ec575f5ffd5b503591905056fea26469706673582212203ceaaab3e7af2875d2d61615c267ccf42bf38fee684d7b1497e38bdc829adb6864736f6c63430008220033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/CertificateVerification.sol",
+  "buildInfoId": "solc-0_8_34-417367161133eea416d2f66c7b7562883ce564c8"
+}
