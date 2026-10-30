@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Verify certificate registration on the Ethereum blockchain.">
+  <title>CertiChain | Certificate Verification</title>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fb;
+      color: #17243a;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #102744;
+      color: white;
+      padding: 22px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand { font-size: 21px; font-weight: 700; letter-spacing: -0.5px; }
+
+    .network {
+      font-size: 12px;
+      color: #d5e7ff;
+      border: 1px solid #49627e;
+      padding: 8px 12px;
+      border-radius: 20px;
+    }
+
+    main { max-width: 760px; margin: 65px auto; padding: 0 20px; }
+
+    .intro { text-align: center; margin-bottom: 30px; }
+
+    .eyebrow {
+      color: #175cd3;
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+    }
+
+    h1 {
+      font-size: clamp(30px, 5vw, 43px);
+      letter-spacing: -1.5px;
+      margin-bottom: 15px;
+    }
+
+    .intro p {
+      color: #68758a;
+      line-height: 1.7;
+      max-width: 530px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e4e9f1;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 15px 45px rgba(20, 40, 70, 0.06);
+    }
+
+    .card h2 { font-size: 20px; margin-bottom: 10px; }
+
+    .hint {
+      font-size: 14px;
+      color: #68758a;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 9px; }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #ccd5e2;
+      border-radius: 9px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus { border-color: #175cd3; box-shadow: 0 0 0 3px #175cd31a; }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 9px;
+      margin-top: 16px;
+      background: #175cd3;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { background: #1049ac; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    button:disabled:hover { background: #175cd3; }
+
+    .secondary { background: #102744; }
+    .secondary:hover { background: #0b1c33; }
+    .secondary:disabled:hover { background: #102744; }
+    .wallet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .wallet-help { margin-bottom: 18px; }
+    @media (max-width: 520px) { .wallet-actions { grid-template-columns: 1fr; } }
+
+    .result {
+      display: none;
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 10px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+    }
+
+    .result strong { display: block; font-size: 16px; margin-bottom: 5px; }
+
+    .result.success { display: block; color: #176534; background: #e9f8ee; border: 1px solid #b9e6c7; }
+    .result.failure { display: block; color: #a32620; background: #fff0ef; border: 1px solid #f3c7c4; }
+    .result.info    { display: block; color: #174b8b; background: #edf5ff; border: 1px solid #c9defb; }
+
+    .divider { margin: 32px 0; border: 0; border-top: 1px solid #e4e9f1; }
+
+    .wallet-status {
+      margin-top: 14px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #68758a;
+      overflow-wrap: anywhere;
+    }
+
+    .wallet-status.ok { color: #176534; }
+    .wallet-status.bad { color: #a32620; }
+
+    #registerForm { margin-top: 24px; }
+
+    .details {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .detail { background: #eef3f9; padding: 17px; border-radius: 10px; }
+    .detail span { display: block; font-size: 12px; color: #68758a; margin-bottom: 7px; }
+    .detail strong { font-size: 13px; }
+
+    .explorer {
+      display: inline-block;
+      margin-top: 18px;
+      color: #175cd3;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .explorer:hover { text-decoration: underline; }
+
+    footer {
+      text-align: center;
+      padding: 25px 20px;
+      color: #748096;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 520px) {
+      header { padding: 18px 5%; }
+      .brand { font-size: 18px; }
+      .network { font-size: 10px; }
+      main { margin: 42px auto; }
+      .card { padding: 23px; }
+      .details { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand">CertiChain</div>
+    <div class="network">Ethereum Sepolia</div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div class="eyebrow">Blockchain-powered verification</div>
+      <h1>Verify a Certificate</h1>
+      <p>
+        Check whether a certificate has been registered on the
+        Ethereum blockchain using its certificate ID.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Certificate lookup</h2>
+      <p class="hint">
+        Enter the exact certificate ID provided by the issuing organisation.
+      </p>
+
+      <form id="verifyForm">
+        <label for="certificateId">Certificate ID</label>
+        <input
+          id="certificateId"
+          type="text"
+          placeholder="e.g. CERTIFICATE-001"
+          autocomplete="off"
+          required
+        >
+        <button type="submit" id="verifyButton">Verify Certificate</button>
+      </form>
+
+      <div id="result" class="result" role="status" aria-live="polite"></div>
+
+      <hr class="divider">
+
+      <h2>Issuer registration</h2>
+      <p class="hint">
+        Connect your authorized issuer wallet to register a new certificate.
+        Only the contract owner can register certificates.
+      </p>
+
+      <div class="wallet-actions">
+        <button type="button" id="connectBrowserWallet" class="secondary">
+          Connect Browser Wallet
+        </button>
+        <button type="button" id="connectWallet" class="secondary">
+          Connect with WalletConnect (QR)
+        </button>
+      </div>
+      <p class="hint wallet-help">On desktop, use a wallet extension for the browser option, or scan the QR code with a compatible phone wallet.</p>
+
+      <p id="walletStatus" class="wallet-status">Wallet not connected.</p>
+
+      <form id="registerForm">
+        <label for="registerId">New Certificate ID</label>
+        <input
+          id="registerId"
+          type="text"
+          placeholder="e.g. CERTIFICATE-002"
+          autocomplete="off"
+          required
+        >
+        <button type="submit" id="registerButton" disabled>
+          Register Certificate
+        </button>
+      </form>
+
+      <div id="registerResult" class="result" role="status" aria-live="polite"></div>
+
+      <div class="details">
+        <div class="detail">
+          <span>Blockchain network</span>
+          <strong>Ethereum Sepolia Testnet</strong>
+        </div>
+        <div class="detail">
+          <span>Verification method</span>
+          <strong>On-chain smart contract</strong>
+        </div>
+      </div>
+
+      <a
+        class="explorer"
+        href="https://sepolia.etherscan.io/address/0xBcB907E19DD840D1f31908c20094b0BA90Db128B"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        View smart contract on Etherscan ↗
+      </a>
+    </section>
+  </main>
+
+  <footer>
+    CertiChain — A blockchain certificate verification project<br>
+    Built for learning and demonstration on the Sepolia testnet.
+  </footer>
+
+  <!-- UMD build: exposes window.ethers. (The .min.js file is not an ES module, so it cannot be imported.) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const CONTRACT_ADDRESS = "0xBcB907E19DD840D1f31908c20094b0BA90Db128B";
+      const SEPOLIA_CHAIN_ID = 11155111n;
+      const SEPOLIA_CHAIN_HEX = "0xaa36a7";
+      const WALLETCONNECT_PROJECT_ID = "9eb8658f7a398bdd0f73e6bb7d7bba20";
+      const APP_URL = "https://certichain-jade.vercel.app";
+      const PUBLIC_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
+
+      const ABI = [
+        "function owner() view returns (address)",
+        "function registerCertificate(bytes32 certificateHash)",
+        "function verifyCertificate(bytes32 certificateHash) view returns (bool)"
+      ];
+
+      if (!window.ethers) {
+        document.getElementById("result").className = "result failure";
+        document.getElementById("result").innerHTML =
+          "<strong>Library failed to load</strong>" +
+          "The ethers.js library could not be loaded. Check your internet connection and reload the page.";
+        return;
+      }
+
+      const { ethers } = window;
+
+      const hashId = (id) => ethers.keccak256(ethers.toUtf8Bytes(id));
+
+      /* ---------- Verification (read-only, no wallet needed) ---------- */
+
+      const verifyForm = document.getElementById("verifyForm");
+      const result = document.getElementById("result");
+      const verifyButton = document.getElementById("verifyButton");
+
+      verifyForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const certificateId = document.getElementById("certificateId").value.trim();
+        if (!certificateId) return;
+
+        result.className = "result info";
+        result.innerHTML =
+          "<strong>Checking blockchain...</strong>Please wait while we look up this certificate.";
+        verifyButton.disabled = true;
+
+        try {
+          const provider = new ethers.JsonRpcProvider(PUBLIC_RPC);
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+          const verified = await contract.verifyCertificate(hashId(certificateId));
+
+          if (verified) {
+            result.className = "result success";
+            result.innerHTML =
+              "<strong>✓ Certificate registered</strong>" +
+              "This certificate ID is registered on the blockchain.";
+          } else {
+            result.className = "result failure";
+            result.innerHTML =
+              "<strong>✕ Certificate not found</strong>" +
+              "No registration was found for this certificate ID.";
+          }
+        } catch (error) {
+          console.error(error);
+          result.className = "result failure";
+          result.innerHTML =
+            "<strong>Verification unavailable</strong>" +
+            "We couldn't reach the blockchain. Please check your internet connection and try again.";
+        } finally {
+          verifyButton.disabled = false;
+        }
+      });
+
+      /* ---------- Issuer wallet + registration ---------- */
+
+      const connectButton = document.getElementById("connectWallet");
+      const browserConnectButton = document.getElementById("connectBrowserWallet");
+      const walletStatus = document.getElementById("walletStatus");
+      const registerForm = document.getElementById("registerForm");
+      const registerButton = document.getElementById("registerButton");
+      const registerResult = document.getElementById("registerResult");
+
+      let signer = null;
+      let certificateContract = null;
+      let isAuthorized = false;
+      let activeWalletProvider = null;
+      let walletConnectProvider = null;
+      let browserListenersAdded = false;
+
+      function setWalletStatus(message, state) {
+        walletStatus.textContent = message;
+        walletStatus.className = "wallet-status" + (state ? " " + state : "");
+      }
+
+      function showRegisterResult(kind, title, message) {
+        registerResult.className = "result " + kind;
+        registerResult.innerHTML = "";
+        const strong = document.createElement("strong");
+        strong.textContent = title;
+        registerResult.appendChild(strong);
+        registerResult.appendChild(document.createTextNode(message));
+      }
+
+      function resetWallet(message) {
+        signer = null;
+        certificateContract = null;
+        activeWalletProvider = null;
+        isAuthorized = false;
+        registerButton.disabled = true;
+        browserConnectButton.textContent = "Connect Browser Wallet";
+        connectButton.textContent = "Connect with WalletConnect (QR)";
+        setWalletStatus(message || "Wallet not connected.");
+      }
+
+      async function getWalletConnectProvider() {
+        if (walletConnectProvider) return walletConnectProvider;
+
+        setWalletStatus("Loading WalletConnect QR connection...");
+        const wcModule = await import("https://esm.sh/@walletconnect/ethereum-provider@2.26.0?bundle");
+        const EthereumProvider = wcModule.EthereumProvider || wcModule.default;
+        if (!EthereumProvider || typeof EthereumProvider.init !== "function") {
+          throw new Error("WalletConnect provider failed to load. Please refresh and try again.");
+        }
+
+        walletConnectProvider = await EthereumProvider.init({
+          projectId: WALLETCONNECT_PROJECT_ID,
+          optionalChains: [Number(SEPOLIA_CHAIN_ID)],
+          showQrModal: true,
+          methods: ["eth_sendTransaction", "personal_sign", "eth_sign", "eth_signTypedData", "eth_signTypedData_v4"],
+          events: ["chainChanged", "accountsChanged"],
+          rpcMap: { [Number(SEPOLIA_CHAIN_ID)]: PUBLIC_RPC },
+          metadata: {
+            name: "CertiChain",
+            description: "Blockchain-powered certificate verification",
+            url: APP_URL,
+            icons: [APP_URL + "/favicon.ico"]
+          }
+        });
+
+        walletConnectProvider.on("accountsChanged", () => resetWallet("Wallet account changed. Connect again to continue."));
+        walletConnectProvider.on("chainChanged", () => resetWallet("Wallet network changed. Connect again to continue."));
+        walletConnectProvider.on("disconnect", () => resetWallet("Wallet disconnected."));
+        return walletConnectProvider;
+      }
+
+      async function authorizeProvider(rawProvider, sourceLabel) {
+        activeWalletProvider = rawProvider;
+        const accounts = await rawProvider.request({ method: "eth_requestAccounts" });
+        if (!accounts || !accounts.length) throw new Error("No wallet account was returned. Try connecting again.");
+
+        const provider = new ethers.BrowserProvider(rawProvider);
+        const network = await provider.getNetwork();
+        if (network.chainId !== SEPOLIA_CHAIN_ID) {
+          throw new Error("Your wallet is not on Ethereum Sepolia. Switch the wallet network to Sepolia and reconnect.");
+        }
+
+        signer = await provider.getSigner();
+        certificateContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        const walletAddress = await signer.getAddress();
+        const ownerAddress = await certificateContract.owner();
+
+        if (walletAddress.toLowerCase() !== ownerAddress.toLowerCase()) {
+          isAuthorized = false;
+          registerButton.disabled = true;
+          setWalletStatus("Wallet connected via " + sourceLabel + ", but it is not the contract owner. Registration remains disabled.", "bad");
+          return;
+        }
+
+        isAuthorized = true;
+        registerButton.disabled = false;
+        setWalletStatus("Authorized issuer connected via " + sourceLabel + ": " + walletAddress, "ok");
+      }
+
+      async function connectBrowserWallet() {
+        browserConnectButton.disabled = true;
+        registerButton.disabled = true;
+        isAuthorized = false;
+        try {
+          if (!window.ethereum) {
+            throw new Error("No browser wallet extension was detected. Install/enable a wallet extension, or use the WalletConnect QR option.");
+          }
+          setWalletStatus("Connecting to your browser wallet extension...");
+          await authorizeProvider(window.ethereum, "browser wallet");
+          if (!browserListenersAdded) {
+            window.ethereum.on?.("accountsChanged", () => resetWallet("Browser wallet account changed. Connect again to continue."));
+            window.ethereum.on?.("chainChanged", () => resetWallet("Browser wallet network changed. Connect again to continue."));
+            browserListenersAdded = true;
+          }
+        } catch (error) {
+          console.error("CertiChain browser wallet error:", error);
+          resetWallet("Browser wallet connection failed: " + (error.shortMessage || error.message || "Unknown error"));
+          walletStatus.classList.add("bad");
+        } finally {
+          browserConnectButton.disabled = false;
+        }
+      }
+
+      async function connectWallet() {
+        connectButton.disabled = true;
+        registerButton.disabled = true;
+        isAuthorized = false;
+        try {
+          setWalletStatus("Opening WalletConnect. Choose a wallet or scan the QR code...");
+          const wcProvider = await getWalletConnectProvider();
+          await wcProvider.connect({ chains: [Number(SEPOLIA_CHAIN_ID)] });
+          await authorizeProvider(wcProvider, "WalletConnect");
+          connectButton.textContent = "Reconnect with WalletConnect";
+        } catch (error) {
+          console.error("CertiChain WalletConnect error:", error);
+          resetWallet("WalletConnect failed: " + (error.shortMessage || error.message || "Unknown error"));
+          walletStatus.classList.add("bad");
+        } finally {
+          connectButton.disabled = false;
+        }
+      }
+
+      browserConnectButton.addEventListener("click", connectBrowserWallet);
+      connectButton.addEventListener("click", connectWallet);
+
+      registerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        if (!isAuthorized || !certificateContract || !signer) {
+          showRegisterResult("failure", "Wallet not ready", "Connect the authorized issuer wallet first.");
+          return;
+        }
+
+        const certificateId = document.getElementById("registerId").value.trim();
+        if (!certificateId) {
+          showRegisterResult("failure", "Missing ID", "Enter a certificate ID.");
+          return;
+        }
+
+        registerButton.disabled = true;
+
+        try {
+          showRegisterResult("info", "Confirm in your wallet", "Approve the transaction in your connected mobile wallet to continue.");
+
+          const transaction = await certificateContract.registerCertificate(hashId(certificateId));
+
+          showRegisterResult("info", "Transaction submitted", "Waiting for blockchain confirmation...");
+
+          await transaction.wait();
+
+          showRegisterResult("success", "✓ Certificate registered", "ID: " + certificateId);
+          registerForm.reset();
+        } catch (error) {
+          console.error(error);
+          showRegisterResult(
+            "failure",
+            "Registration failed",
+            error.shortMessage || error.reason || error.message
+          );
+        } finally {
+          registerButton.disabled = !isAuthorized;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

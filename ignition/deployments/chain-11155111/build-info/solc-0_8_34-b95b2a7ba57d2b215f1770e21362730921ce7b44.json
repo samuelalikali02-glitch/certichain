@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_34-b95b2a7ba57d2b215f1770e21362730921ce7b44",
+  "solcVersion": "0.8.34",
+  "solcLongVersion": "0.8.34+commit.80d5c536",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.21.1"
+  },
+  "userSourceNameMap": {
+    "contracts/CertificateVerificationV2.sol": "project/contracts/CertificateVerificationV2.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "osaka",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/CertificateVerificationV2.sol": {
+        "content": "\r\n// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.24;\r\n\r\ncontract CertificateVerificationV2 {\r\n    address public owner;\r\n\r\n    struct Certificate {\r\n        address issuer;\r\n        uint256 registeredAt;\r\n        bool exists;\r\n        bool revoked;\r\n    }\r\n\r\n    mapping(address => bool) public authorizedInstitutions;\r\n    mapping(bytes32 => Certificate) private certificates;\r\n\r\n    event InstitutionAuthorized(address indexed institution);\r\n    event InstitutionRemoved(address indexed institution);\r\n\r\n    event CertificateRegistered(\r\n        bytes32 indexed documentHash,\r\n        address indexed issuer,\r\n        uint256 registeredAt\r\n    );\r\n\r\n    event CertificateRevoked(\r\n        bytes32 indexed documentHash,\r\n        address indexed revokedBy\r\n    );\r\n\r\n    modifier onlyOwner() {\r\n        require(msg.sender == owner, \"Only administrator\");\r\n        _;\r\n    }\r\n\r\n    modifier onlyAuthorizedIssuer() {\r\n        require(\r\n            msg.sender == owner || authorizedInstitutions[msg.sender],\r\n            \"Not an authorized issuer\"\r\n        );\r\n        _;\r\n    }\r\n\r\n    constructor() {\r\n        owner = msg.sender;\r\n    }\r\n\r\n    function authorizeInstitution(address institution) external onlyOwner {\r\n        require(institution != address(0), \"Invalid institution address\");\r\n        require(!authorizedInstitutions[institution], \"Already authorized\");\r\n\r\n        authorizedInstitutions[institution] = true;\r\n\r\n        emit InstitutionAuthorized(institution);\r\n    }\r\n\r\n    function removeInstitution(address institution) external onlyOwner {\r\n        require(authorizedInstitutions[institution], \"Not authorized\");\r\n\r\n        authorizedInstitutions[institution] = false;\r\n\r\n        emit InstitutionRemoved(institution);\r\n    }\r\n\r\n    function registerCertificate(bytes32 documentHash)\r\n        external\r\n        onlyAuthorizedIssuer\r\n    {\r\n        require(documentHash != bytes32(0), \"Invalid document hash\");\r\n        require(!certificates[documentHash].exists, \"Already registered\");\r\n\r\n        certificates[documentHash] = Certificate({\r\n            issuer: msg.sender,\r\n            registeredAt: block.timestamp,\r\n            exists: true,\r\n            revoked: false\r\n        });\r\n\r\n        emit CertificateRegistered(\r\n            documentHash,\r\n            msg.sender,\r\n            block.timestamp\r\n        );\r\n    }\r\n\r\n    function revokeCertificate(bytes32 documentHash)\r\n        external\r\n    {\r\n        Certificate storage certificate = certificates[documentHash];\r\n\r\n        require(certificate.exists, \"Certificate not found\");\r\n        require(!certificate.revoked, \"Already revoked\");\r\n\r\n        require(\r\n            msg.sender == owner || msg.sender == certificate.issuer,\r\n            \"Not authorized to revoke\"\r\n        );\r\n\r\n        certificate.revoked = true;\r\n\r\n        emit CertificateRevoked(documentHash, msg.sender);\r\n    }\r\n\r\n    function verifyCertificate(bytes32 documentHash)\r\n        external\r\n        view\r\n        returns (\r\n            bool exists,\r\n            bool revoked,\r\n            address issuer,\r\n            uint256 registeredAt\r\n        )\r\n    {\r\n        Certificate memory certificate = certificates[documentHash];\r\n\r\n        return (\r\n            certificate.exists,\r\n            certificate.revoked,\r\n            certificate.issuer,\r\n            certificate.registeredAt\r\n        );\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}
