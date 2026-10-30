@@ -9,1486 +9,933 @@
 
 <style>
 :root {
-  --navy: #102744;
-  --blue: #175cd3;
-  --bg: #f5f7fb;
-  --white: #fff;
-  --text: #17243a;
-  --muted: #68758a;
-  --border: #e4e9f1;
-  --green: #176534;
-  --red: #a32620;
+  --navy:#102744;--blue:#175cd3;--bg:#f5f7fb;--white:#fff;
+  --text:#17243a;--muted:#68758a;--border:#e4e9f1;
+  --green:#176534;--red:#a32620;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+button,input{font:inherit}
+button{cursor:pointer}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:245px;background:var(--navy);color:white;padding:26px 16px;display:flex;flex-direction:column;flex-shrink:0}
+.logo{font-size:23px;font-weight:800;padding:0 12px 32px;letter-spacing:-.7px}
+.logo span{color:#72a8ff}
+.nav-label{color:#91a4bd;font-size:10px;font-weight:bold;letter-spacing:1.5px;padding:12px}
+.nav-button{display:flex;align-items:center;gap:13px;width:100%;padding:13px 12px;margin:3px 0;border:0;border-radius:8px;color:#cbd5e1;background:transparent;text-align:left;font-size:14px;transition:.2s}
+.nav-button:hover,.nav-button.active{color:white;background:#244568}
+.nav-button.active{border-left:3px solid #72a8ff}
+.nav-icon{width:20px;text-align:center;font-size:17px}
+.sidebar-bottom{margin-top:auto;padding:18px 12px 0;border-top:1px solid #34506d;color:#cbd5e1;font-size:12px;line-height:1.8}
+.main{flex:1;min-width:0}
+.topbar{background:white;min-height:76px;padding:15px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:15px}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.menu-toggle{display:none;border:0;background:transparent;font-size:23px;color:var(--navy)}
+.page-title{font-size:19px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.network-pill{background:#edf5ff;color:#174b8b;border-radius:20px;padding:8px 12px;font-size:12px;font-weight:700}
+.connect-button{background:var(--navy);color:white;border:0;border-radius:8px;padding:11px 15px;font-size:13px;font-weight:700}
+.connect-button:hover{background:#1c4169}
+.content{max-width:1150px;padding:34px;margin:auto}
+.page{display:none}
+.page.active{display:block}
+.welcome{margin-bottom:27px}
+.welcome h1{font-size:27px;margin-bottom:9px}
+.welcome p{color:var(--muted);font-size:14px;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px}
+.stat-card,.card{background:white;border:1px solid var(--border);border-radius:12px;padding:23px;box-shadow:0 4px 18px rgba(20,40,70,.025)}
+.stat-card .stat-icon{font-size:22px;margin-bottom:15px}
+.stat-card p{color:var(--muted);font-size:13px;margin-bottom:9px}
+.stat-card strong{font-size:17px}
+.card{margin-bottom:20px}
+.card h2{font-size:18px;margin-bottom:9px}
+.card-description{color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:21px}
+.section-heading{margin-bottom:20px}
+.section-heading h1{font-size:25px;margin-bottom:8px}
+.section-heading p{color:var(--muted);font-size:14px;line-height:1.6}
+.quick-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+.quick-action{border:1px solid var(--border);border-radius:10px;padding:20px;background:white;text-align:left;color:var(--text)}
+.quick-action:hover{border-color:var(--blue);background:#f8fbff}
+.quick-action .action-icon{font-size:23px;margin-bottom:12px}
+.quick-action strong{display:block;margin-bottom:7px}
+.quick-action small{color:var(--muted);line-height:1.5}
+label{display:block;font-size:13px;font-weight:700;margin:17px 0 9px}
+input{width:100%;border:1px solid #ccd5e2;border-radius:8px;padding:13px;background:white;color:var(--text);font-size:14px}
+input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px #175cd31a}
+.primary-button,.danger-button{width:100%;padding:14px;border:0;border-radius:8px;margin-top:16px;background:var(--blue);color:white;font-size:14px;font-weight:700}
+.primary-button:hover{background:#1049ac}
+.danger-button{background:#b42318}
+.danger-button:hover{background:#8f1c13}
+button:disabled{opacity:.55;cursor:not-allowed}
+.file-note{color:var(--muted);font-size:12px;margin-top:9px;line-height:1.6}
+.result{display:none;margin-top:19px;padding:16px;border-radius:9px;font-size:13px;line-height:1.7;overflow-wrap:anywhere}
+.result strong{display:block;margin-bottom:6px;font-size:15px}
+.result.success{display:block;color:var(--green);background:#e9f8ee;border:1px solid #b9e6c7}
+.result.failure{display:block;color:var(--red);background:#fff0ef;border:1px solid #f3c7c4}
+.result.info{display:block;color:#174b8b;background:#edf5ff;border:1px solid #c9defb}
+.wallet-status{background:#f2f5f9;border-radius:8px;padding:13px;font-size:12px;color:var(--muted);overflow-wrap:anywhere;line-height:1.7;margin-top:15px}
+.wallet-status.ok{color:var(--green);background:#e9f8ee}
+.wallet-status.bad{color:var(--red);background:#fff0ef}
+.hidden{display:none!important}
+.detail-line{margin-top:8px;overflow-wrap:anywhere}
+.detail-line strong{display:inline;font-size:inherit}
+.explorer{display:inline-block;color:var(--blue);margin-top:15px;margin-right:15px;text-decoration:none;font-size:13px;font-weight:700}
+.explorer:hover{text-decoration:underline}
+.note{margin-top:17px;font-size:12px;color:var(--muted);line-height:1.7}
+footer{padding:25px;text-align:center;color:var(--muted);font-size:12px}
+@media(max-width:800px){
+.sidebar{position:fixed;z-index:20;top:0;bottom:0;left:-260px;transition:left .25s}
+.sidebar.open{left:0}
+.menu-toggle{display:block}
+.topbar{padding:14px 18px}
+.content{padding:23px 17px}
+.stats{grid-template-columns:1fr}
 }
-button, input { font: inherit; }
-button { cursor: pointer; }
-.layout { display: flex; min-height: 100vh; }
-
-.sidebar {
-  width: 245px;
-  background: var(--navy);
-  color: white;
-  padding: 26px 16px;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-.logo {
-  font-size: 23px;
-  font-weight: 800;
-  padding: 0 12px 32px;
-  letter-spacing: -.7px;
-}
-.logo span { color: #72a8ff; }
-.nav-label {
-  color: #91a4bd;
-  font-size: 10px;
-  font-weight: bold;
-  letter-spacing: 1.5px;
-  padding: 12px;
-}
-.nav-button {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  width: 100%;
-  padding: 13px 12px;
-  margin: 3px 0;
-  border: 0;
-  border-radius: 8px;
-  color: #cbd5e1;
-  background: transparent;
-  text-align: left;
-  font-size: 14px;
-  transition: .2s;
-}
-.nav-button:hover, .nav-button.active {
-  color: white;
-  background: #244568;
-}
-.nav-button.active { border-left: 3px solid #72a8ff; }
-.nav-icon { width: 20px; text-align: center; font-size: 17px; }
-.sidebar-bottom {
-  margin-top: auto;
-  padding: 18px 12px 0;
-  border-top: 1px solid #34506d;
-  color: #cbd5e1;
-  font-size: 12px;
-  line-height: 1.8;
-}
-
-.main { flex: 1; min-width: 0; }
-.topbar {
-  background: white;
-  min-height: 76px;
-  padding: 15px 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  gap: 15px;
-}
-.topbar-left { display: flex; align-items: center; gap: 14px; }
-.menu-toggle {
-  display: none;
-  border: 0;
-  background: transparent;
-  font-size: 23px;
-  color: var(--navy);
-}
-.page-title { font-size: 19px; font-weight: 700; }
-.topbar-right { display: flex; align-items: center; gap: 12px; }
-.network-pill {
-  background: #edf5ff;
-  color: #174b8b;
-  border-radius: 20px;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.connect-button {
-  background: var(--navy);
-  color: white;
-  border: 0;
-  border-radius: 8px;
-  padding: 11px 15px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.connect-button:hover { background: #1c4169; }
-
-.content { max-width: 1150px; padding: 34px; margin: auto; }
-.page { display: none; }
-.page.active { display: block; }
-.welcome { margin-bottom: 27px; }
-.welcome h1 { font-size: 27px; margin-bottom: 9px; }
-.welcome p { color: var(--muted); font-size: 14px; line-height: 1.6; }
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-bottom: 24px;
-}
-.stat-card, .card {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 23px;
-  box-shadow: 0 4px 18px rgba(20,40,70,.025);
-}
-.stat-card .stat-icon { font-size: 22px; margin-bottom: 15px; }
-.stat-card p { color: var(--muted); font-size: 13px; margin-bottom: 9px; }
-.stat-card strong { font-size: 17px; }
-.card { margin-bottom: 20px; }
-.card h2 { font-size: 18px; margin-bottom: 9px; }
-.card-description {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.7;
-  margin-bottom: 21px;
-}
-.section-heading { margin-bottom: 20px; }
-.section-heading h1 { font-size: 25px; margin-bottom: 8px; }
-.section-heading p { color: var(--muted); font-size: 14px; line-height: 1.6; }
-
-.quick-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-}
-.quick-action {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 20px;
-  background: white;
-  text-align: left;
-  color: var(--text);
-}
-.quick-action:hover { border-color: var(--blue); background: #f8fbff; }
-.quick-action .action-icon { font-size: 23px; margin-bottom: 12px; }
-.quick-action strong { display: block; margin-bottom: 7px; }
-.quick-action small { color: var(--muted); line-height: 1.5; }
-
-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  margin: 17px 0 9px;
-}
-input {
-  width: 100%;
-  border: 1px solid #ccd5e2;
-  border-radius: 8px;
-  padding: 13px;
-  background: white;
-  color: var(--text);
-  font-size: 14px;
-}
-input:focus {
-  outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px #175cd31a;
-}
-.primary-button, .danger-button {
-  width: 100%;
-  padding: 14px;
-  border: 0;
-  border-radius: 8px;
-  margin-top: 16px;
-  background: var(--blue);
-  color: white;
-  font-size: 14px;
-  font-weight: 700;
-}
-.primary-button:hover { background: #1049ac; }
-.danger-button { background: #b42318; }
-.danger-button:hover { background: #8f1c13; }
-button:disabled { opacity: .55; cursor: not-allowed; }
-.file-note { color: var(--muted); font-size: 12px; margin-top: 9px; line-height: 1.6; }
-
-.result {
-  display: none;
-  margin-top: 19px;
-  padding: 16px;
-  border-radius: 9px;
-  font-size: 13px;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
-.result strong { display: block; margin-bottom: 6px; font-size: 15px; }
-.result.success { display: block; color: var(--green); background: #e9f8ee; border: 1px solid #b9e6c7; }
-.result.failure { display: block; color: var(--red); background: #fff0ef; border: 1px solid #f3c7c4; }
-.result.info { display: block; color: #174b8b; background: #edf5ff; border: 1px solid #c9defb; }
-.wallet-status {
-  background: #f2f5f9;
-  border-radius: 8px;
-  padding: 13px;
-  font-size: 12px;
-  color: var(--muted);
-  overflow-wrap: anywhere;
-  line-height: 1.7;
-  margin-top: 15px;
-}
-.wallet-status.ok { color: var(--green); background: #e9f8ee; }
-.wallet-status.bad { color: var(--red); background: #fff0ef; }
-.hidden { display: none !important; }
-.detail-line { margin-top: 8px; overflow-wrap: anywhere; }
-.detail-line strong { display: inline; font-size: inherit; }
-
-.explorer {
-  display: inline-block;
-  color: var(--blue);
-  margin-top: 15px;
-  margin-right: 15px;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 700;
-}
-.explorer:hover { text-decoration: underline; }
-.note {
-  margin-top: 17px;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.7;
-}
-footer {
-  padding: 25px;
-  text-align: center;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-@media(max-width: 800px) {
-  .sidebar {
-    position: fixed;
-    z-index: 20;
-    top: 0;
-    bottom: 0;
-    left: -260px;
-    transition: left .25s;
-  }
-  .sidebar.open { left: 0; }
-  .menu-toggle { display: block; }
-  .topbar { padding: 14px 18px; }
-  .content { padding: 23px 17px; }
-  .stats { grid-template-columns: 1fr; }
-}
-@media(max-width: 520px) {
-  .network-pill { display: none; }
-  .page-title { font-size: 16px; }
-  .connect-button { padding: 10px; font-size: 11px; }
-  .quick-actions { grid-template-columns: 1fr; }
-  .welcome h1 { font-size: 23px; }
+@media(max-width:520px){
+.network-pill{display:none}
+.page-title{font-size:16px}
+.connect-button{padding:10px;font-size:11px}
+.quick-actions{grid-template-columns:1fr}
+.welcome h1{font-size:23px}
 }
 </style>
 </head>
 
 <body>
 <div class="layout">
-
-  <aside class="sidebar" id="sidebar">
-    <div class="logo">Certi<span>Chain</span></div>
-    <div class="nav-label">MAIN MENU</div>
-
-    <button class="nav-button active" data-page="dashboard">
-      <span class="nav-icon">▦</span> Dashboard
-    </button>
-
-    <button class="nav-button" data-page="verify">
-      <span class="nav-icon">⌕</span> Verify Certificate
-    </button>
-
-    <button class="nav-button" data-page="register">
-      <span class="nav-icon">＋</span> Register Certificate
-    </button>
-
-    <button class="nav-button hidden" id="institutionNav" data-page="institutions">
-      <span class="nav-icon">▤</span> Institutions
-    </button>
-
-    <div class="sidebar-bottom">
-      <div>● Ethereum Sepolia</div>
-      <div>CertiChain V2</div>
-    </div>
-  </aside>
-
-  <div class="main">
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="menu-toggle" id="menuToggle" aria-label="Open menu">☰</button>
-        <div class="page-title" id="pageTitle">Dashboard</div>
-      </div>
-
-      <div class="topbar-right">
-        <span class="network-pill">Ethereum Sepolia</span>
-        <button class="connect-button" id="connectButton">Connect Wallet</button>
-      </div>
-    </header>
-
-    <main class="content">
-
-      <section class="page active" id="dashboard">
-        <div class="welcome">
-          <h1>Welcome to CertiChain</h1>
-          <p>A blockchain-powered platform for secure certificate registration and verification.</p>
-        </div>
-
-        <div class="stats">
-          <div class="stat-card">
-            <div class="stat-icon">🛡️</div>
-            <p>Verification system</p>
-            <strong>Blockchain secured</strong>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📄</div>
-            <p>Document fingerprint</p>
-            <strong>SHA-256</strong>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">⛓️</div>
-            <p>Network</p>
-            <strong>Ethereum Sepolia</strong>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Quick actions</h2>
-          <p class="card-description">Choose what you would like to do.</p>
-
-          <div class="quick-actions">
-            <button class="quick-action" data-go="verify">
-              <div class="action-icon">🔍</div>
-              <strong>Verify a certificate</strong>
-              <small>Upload a certificate and check its blockchain registration.</small>
-            </button>
-
-            <button class="quick-action" data-go="register">
-              <div class="action-icon">📁</div>
-              <strong>Register a certificate</strong>
-              <small>Register a document using an authorized issuer wallet.</small>
-            </button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Wallet information</h2>
-          <p class="card-description">Connect your wallet to access issuer and administrator features.</p>
-          <div id="dashboardWallet" class="wallet-status">No wallet connected.</div>
-        </div>
-      </section>
-
-      <section class="page" id="verify">
-        <div class="section-heading">
-          <h1>Verify Certificate</h1>
-          <p>Check whether an exact certificate document has been registered on the blockchain.</p>
-        </div>
-
-        <div class="card">
-          <h2>Upload document</h2>
-          <p class="card-description">
-            Select the original PDF or image certificate. CertiChain calculates its SHA-256 fingerprint and checks the blockchain and metadata database.
-          </p>
-
-          <form id="verifyForm">
-            <label for="verifyFile">Certificate document</label>
-            <input type="file" id="verifyFile" accept=".pdf,.png,.jpg,.jpeg" required>
-            <p class="file-note">Supported formats: PDF, PNG and JPEG. Maximum size: 10 MB.</p>
-            <button class="primary-button" id="verifyButton" type="submit">Verify Certificate</button>
-          </form>
-
-          <div id="verifyResult" class="result" role="status" aria-live="polite"></div>
-        </div>
-      </section>
-
-      <section class="page" id="register">
-        <div class="section-heading">
-          <h1>Register Certificate</h1>
-          <p>Upload a certificate to IPFS and register its fingerprint through your authorized Ethereum wallet.</p>
-        </div>
-
-        <div class="card">
-          <h2>Issuer registration</h2>
-          <p class="card-description">
-            Only the administrator and authorized institutions can register certificates.
-            The original document is uploaded to Pinata IPFS, its SHA-256 fingerprint is registered on Ethereum, and its metadata is saved in the database.
-          </p>
-
-          <div id="registerAccess" class="wallet-status">
-            Connect an authorized wallet to access registration.
-          </div>
-
-          <form id="registerForm" class="hidden">
-            <label for="registerFile">Certificate document</label>
-            <input type="file" id="registerFile" accept=".pdf,.png,.jpg,.jpeg" required>
-            <p class="file-note">Supported formats: PDF, PNG and JPEG. Maximum size: 10 MB.</p>
-            <button class="primary-button" id="registerButton" type="submit">
-              Upload and Register Certificate
-            </button>
-          </form>
-
-          <div id="registerResult" class="result" role="status" aria-live="polite"></div>
-        </div>
-
-        <div class="card" id="revokeCard">
-          <h2>Revoke certificate</h2>
-          <p class="card-description">
-            An administrator or the original issuing institution can revoke a registered certificate.
-          </p>
-
-          <form id="revokeForm">
-            <label for="revokeFile">Original certificate document</label>
-            <input type="file" id="revokeFile" accept=".pdf,.png,.jpg,.jpeg" required>
-            <button class="danger-button" id="revokeButton" type="submit">Revoke Certificate</button>
-          </form>
-
-          <div id="revokeResult" class="result" role="status" aria-live="polite"></div>
-        </div>
-      </section>
-
-      <section class="page" id="institutions">
-        <div class="section-heading">
-          <h1>Institution Management</h1>
-          <p>Manage institutions permitted to register certificates on CertiChain.</p>
-        </div>
-
-        <div class="card">
-          <h2>Authorize institution</h2>
-          <p class="card-description">
-            Enter the institution's public Ethereum wallet address. Only the contract administrator can perform this action.
-          </p>
-
-          <form id="authorizeForm">
-            <label for="institutionAddress">Institution wallet address</label>
-            <input id="institutionAddress" type="text" placeholder="0x..." required>
-            <button class="primary-button" id="authorizeButton" type="submit">Authorize Institution</button>
-          </form>
-
-          <div id="adminResult" class="result" role="status" aria-live="polite"></div>
-        </div>
-
-        <div class="card">
-          <h2>Remove institution access</h2>
-          <p class="card-description">Remove an institution's permission to register new certificates.</p>
-
-          <form id="removeForm">
-            <label for="removeAddress">Institution wallet address</label>
-            <input id="removeAddress" type="text" placeholder="0x..." required>
-            <button class="danger-button" id="removeButton" type="submit">Remove Institution</button>
-          </form>
-
-          <div id="removeResult" class="result" role="status" aria-live="polite"></div>
-        </div>
-      </section>
-
-    </main>
-
-    <footer>
-      CertiChain — Blockchain Certificate Verification<br>
-      Built on Ethereum Sepolia Testnet.
-    </footer>
+<aside class="sidebar" id="sidebar">
+  <div class="logo">Certi<span>Chain</span></div>
+  <div class="nav-label">MAIN MENU</div>
+  <button class="nav-button active" data-page="dashboard"><span class="nav-icon">▦</span> Dashboard</button>
+  <button class="nav-button" data-page="verify"><span class="nav-icon">⌕</span> Verify Certificate</button>
+  <button class="nav-button" data-page="register"><span class="nav-icon">＋</span> Register Certificate</button>
+  <button class="nav-button hidden" id="institutionNav" data-page="institutions"><span class="nav-icon">▤</span> Institutions</button>
+  <div class="sidebar-bottom">
+    <div>● Ethereum Sepolia</div>
+    <div>CertiChain V2</div>
   </div>
+</aside>
+
+<div class="main">
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu">☰</button>
+    <div class="page-title" id="pageTitle">Dashboard</div>
+  </div>
+  <div class="topbar-right">
+    <span class="network-pill">Ethereum Sepolia</span>
+    <button class="connect-button" id="connectButton">Connect Wallet</button>
+  </div>
+</header>
+
+<main class="content">
+<section class="page active" id="dashboard">
+  <div class="welcome">
+    <h1>Welcome to CertiChain</h1>
+    <p>A blockchain-powered platform for secure certificate registration and verification.</p>
+  </div>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-icon">🛡️</div><p>Verification system</p><strong>Blockchain secured</strong></div>
+    <div class="stat-card"><div class="stat-icon">📄</div><p>Document fingerprint</p><strong>SHA-256</strong></div>
+    <div class="stat-card"><div class="stat-icon">⛓️</div><p>Network</p><strong>Ethereum Sepolia</strong></div>
+  </div>
+  <div class="card">
+    <h2>Quick actions</h2>
+    <p class="card-description">Choose what you would like to do.</p>
+    <div class="quick-actions">
+      <button class="quick-action" data-go="verify"><div class="action-icon">🔍</div><strong>Verify a certificate</strong><small>Upload a certificate and check its blockchain registration.</small></button>
+      <button class="quick-action" data-go="register"><div class="action-icon">📁</div><strong>Register a certificate</strong><small>Register a document using an authorized issuer wallet.</small></button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Wallet information</h2>
+    <p class="card-description">Connect your wallet to access issuer and administrator features.</p>
+    <div id="dashboardWallet" class="wallet-status">No wallet connected.</div>
+  </div>
+</section>
+
+<section class="page" id="verify">
+  <div class="section-heading"><h1>Verify Certificate</h1><p>Check whether an exact certificate document has been registered on the blockchain.</p></div>
+  <div class="card">
+    <h2>Upload document</h2>
+    <p class="card-description">Select the original PDF or image certificate. CertiChain calculates its SHA-256 fingerprint and checks the blockchain and metadata database.</p>
+    <form id="verifyForm">
+      <label for="verifyFile">Certificate document</label>
+      <input type="file" id="verifyFile" accept=".pdf,.png,.jpg,.jpeg" required>
+      <p class="file-note">Supported formats: PDF, PNG and JPEG. Maximum size: 10 MB.</p>
+      <button class="primary-button" id="verifyButton" type="submit">Verify Certificate</button>
+    </form>
+    <div id="verifyResult" class="result" role="status" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="page" id="register">
+  <div class="section-heading"><h1>Register Certificate</h1><p>Upload a certificate to IPFS and register its fingerprint through your authorized Ethereum wallet.</p></div>
+  <div class="card">
+    <h2>Issuer registration</h2>
+    <p class="card-description">Only the administrator and authorized institutions can register certificates. The original document is uploaded to Pinata IPFS, its SHA-256 fingerprint is registered on Ethereum, and its metadata is saved in the database.</p>
+    <div id="registerAccess" class="wallet-status">Connect an authorized wallet to access registration.</div>
+    <form id="registerForm" class="hidden">
+      <label for="registerFile">Certificate document</label>
+      <input type="file" id="registerFile" accept=".pdf,.png,.jpg,.jpeg" required>
+      <p class="file-note">Supported formats: PDF, PNG and JPEG. Maximum size: 10 MB.</p>
+      <button class="primary-button" id="registerButton" type="submit">Upload and Register Certificate</button>
+    </form>
+    <div id="registerResult" class="result" role="status" aria-live="polite"></div>
+  </div>
+  <div class="card" id="revokeCard">
+    <h2>Revoke certificate</h2>
+    <p class="card-description">An administrator or the original issuing institution can revoke a registered certificate.</p>
+    <form id="revokeForm">
+      <label for="revokeFile">Original certificate document</label>
+      <input type="file" id="revokeFile" accept=".pdf,.png,.jpg,.jpeg" required>
+      <button class="danger-button" id="revokeButton" type="submit">Revoke Certificate</button>
+    </form>
+    <div id="revokeResult" class="result" role="status" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="page" id="institutions">
+  <div class="section-heading"><h1>Institution Management</h1><p>Manage institutions permitted to register certificates on CertiChain.</p></div>
+  <div class="card">
+    <h2>Authorize institution</h2>
+    <p class="card-description">Enter the institution's public Ethereum wallet address. Only the contract administrator can perform this action.</p>
+    <form id="authorizeForm">
+      <label for="institutionAddress">Institution wallet address</label>
+      <input id="institutionAddress" type="text" placeholder="0x..." required>
+      <button class="primary-button" id="authorizeButton" type="submit">Authorize Institution</button>
+    </form>
+    <div id="adminResult" class="result" role="status" aria-live="polite"></div>
+  </div>
+  <div class="card">
+    <h2>Remove institution access</h2>
+    <p class="card-description">Remove an institution's permission to register new certificates.</p>
+    <form id="removeForm">
+      <label for="removeAddress">Institution wallet address</label>
+      <input id="removeAddress" type="text" placeholder="0x..." required>
+      <button class="danger-button" id="removeButton" type="submit">Remove Institution</button>
+    </form>
+    <div id="removeResult" class="result" role="status" aria-live="polite"></div>
+  </div>
+</section>
+</main>
+
+<footer>CertiChain — Blockchain Certificate Verification<br>Built on Ethereum Sepolia Testnet.</footer>
+</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
 
 <script>
 (function () {
-  "use strict";
+"use strict";
 
-  const CONTRACT_ADDRESS = "0xb5d3027B91c48f2073e83367ADF6eB7cDfb50c8f";
-  const SEPOLIA_CHAIN_ID = 11155111n;
-  const PUBLIC_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
-  const WALLETCONNECT_PROJECT_ID = "9eb8658f7a398bdd0f73e6bb7d7bba20";
-  const APP_URL = "https://certichain-jade.vercel.app";
+const CONTRACT_ADDRESS = "0xb5d3027B91c48f2073e83367ADF6eB7cDfb50c8f";
+const SEPOLIA_CHAIN_ID = 11155111n;
+const PUBLIC_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
+const WALLETCONNECT_PROJECT_ID = "9eb8658f7a398bdd0f73e6bb7d7bba20";
+const APP_URL = "https://certichain-jade.vercel.app";
 
-  // LOCAL DEVELOPMENT BACKEND.
-  // Replace with your hosted HTTPS backend URL before public deployment.
-  const UPLOAD_API_URL = "http://localhost:3000/api/upload";
-  const METADATA_API_URL = "http://localhost:3000/api/metadata";
+// LOCAL DEVELOPMENT BACKEND.
+// Change these to your hosted HTTPS backend URLs when deploying.
+const UPLOAD_API_URL = "http://localhost:3000/api/upload";
+const METADATA_API_URL = "http://localhost:3000/api/metadata";
+const AUTH_CHALLENGE_URL = "http://localhost:3000/api/auth/challenge";
+const AUTH_VERIFY_URL = "http://localhost:3000/api/auth/verify";
 
-  const IPFS_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
+const IPFS_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
 
-  const ABI = [
-    "function owner() view returns (address)",
-    "function authorizedInstitutions(address) view returns (bool)",
-    "function authorizeInstitution(address institution)",
-    "function removeInstitution(address institution)",
-    "function registerCertificate(bytes32 documentHash)",
-    "function revokeCertificate(bytes32 documentHash)",
-    "function verifyCertificate(bytes32 documentHash) view returns (bool exists, bool revoked, address issuer, uint256 registeredAt)"
-  ];
+const ABI = [
+  "function owner() view returns (address)",
+  "function authorizedInstitutions(address) view returns (bool)",
+  "function authorizeInstitution(address institution)",
+  "function removeInstitution(address institution)",
+  "function registerCertificate(bytes32 documentHash)",
+  "function revokeCertificate(bytes32 documentHash)",
+  "function verifyCertificate(bytes32 documentHash) view returns (bool exists, bool revoked, address issuer, uint256 registeredAt)"
+];
 
-  const $ = id => document.getElementById(id);
+const $ = id => document.getElementById(id);
 
-  if (!window.ethers) {
-    $("verifyResult").className = "result failure";
-    $("verifyResult").textContent =
-      "Ethers.js could not load. Check your internet connection and reload.";
-    return;
+if (!window.ethers) {
+  $("verifyResult").className = "result failure";
+  $("verifyResult").textContent = "Ethers.js could not load. Check your internet connection and reload.";
+  return;
+}
+
+const { ethers } = window;
+const readProvider = new ethers.JsonRpcProvider(PUBLIC_RPC);
+const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, readProvider);
+
+let signer = null;
+let walletContract = null;
+let isOwner = false;
+let isAuthorized = false;
+let walletConnectProvider = null;
+let sessionToken = null;
+
+// NAVIGATION
+function navigate(page) {
+  document.querySelectorAll(".page").forEach(section => {
+    section.classList.toggle("active", section.id === page);
+  });
+  document.querySelectorAll(".nav-button").forEach(button => {
+    button.classList.toggle("active", button.dataset.page === page);
+  });
+  const titles = {
+    dashboard:"Dashboard",
+    verify:"Verify Certificate",
+    register:"Register Certificate",
+    institutions:"Institution Management"
+  };
+  $("pageTitle").textContent = titles[page] || "Dashboard";
+  $("sidebar").classList.remove("open");
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll("[data-page]").forEach(button => {
+  button.addEventListener("click", () => navigate(button.dataset.page));
+});
+document.querySelectorAll("[data-go]").forEach(button => {
+  button.addEventListener("click", () => navigate(button.dataset.go));
+});
+$("menuToggle").addEventListener("click", () => $("sidebar").classList.toggle("open"));
+
+// RESULT DISPLAY
+function showResult(id,type,title,message) {
+  const box = $(id);
+  box.className = "result " + type;
+  box.replaceChildren();
+  const heading = document.createElement("strong");
+  heading.textContent = title;
+  box.appendChild(heading);
+  box.appendChild(document.createTextNode(message));
+}
+
+function addDetail(parent,label,value) {
+  const line = document.createElement("p");
+  line.className = "detail-line";
+  const strong = document.createElement("strong");
+  strong.textContent = label + ": ";
+  line.appendChild(strong);
+  line.appendChild(document.createTextNode(String(value)));
+  parent.appendChild(line);
+}
+
+function addLink(parent,url,label) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.className = "explorer";
+  link.textContent = label;
+  parent.appendChild(link);
+}
+
+function setWalletStatus(message,state) {
+  $("dashboardWallet").textContent = message;
+  $("dashboardWallet").className = "wallet-status" + (state ? " " + state : "");
+}
+
+// FILE VALIDATION AND HASHING
+async function calculateDocumentHash(file) {
+  if (!file) throw new Error("Select a certificate file.");
+  const allowed = ["application/pdf","image/png","image/jpeg"];
+  if (!allowed.includes(file.type)) throw new Error("Only PDF, PNG and JPEG files are supported.");
+  if (file.size === 0) throw new Error("The selected file is empty.");
+  if (file.size > 10 * 1024 * 1024) throw new Error("File is too large. Maximum size is 10 MB.");
+  if (!window.crypto || !window.crypto.subtle) throw new Error("Secure hashing requires HTTPS or localhost.");
+  const buffer = await file.arrayBuffer();
+  const digest = await crypto.subtle.digest("SHA-256",buffer);
+  return ethers.hexlify(new Uint8Array(digest));
+}
+
+// BACKEND WALLET AUTHENTICATION
+async function authenticateWallet(address) {
+  // Request a one-time challenge from the backend.
+  const challengeResponse = await fetch(AUTH_CHALLENGE_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({address})
+  });
+
+  const challenge = await challengeResponse.json();
+
+  if (!challengeResponse.ok || !challenge.success || !challenge.challengeId || !challenge.message) {
+    throw new Error(challenge.error || "Could not request wallet authentication.");
   }
 
-  const { ethers } = window;
-  const readProvider = new ethers.JsonRpcProvider(PUBLIC_RPC);
-  const readContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, readProvider);
+  // Ask the connected wallet to sign the challenge.
+  const signature = await signer.signMessage(challenge.message);
 
-  let signer = null;
-  let walletContract = null;
-  let isOwner = false;
-  let isAuthorized = false;
-  let walletConnectProvider = null;
+  // Send the signature to the backend for verification.
+  const verifyResponse = await fetch(AUTH_VERIFY_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      challengeId:challenge.challengeId,
+      signature
+    })
+  });
 
-  // NAVIGATION
-  function navigate(page) {
-    document.querySelectorAll(".page").forEach(section => {
-      section.classList.toggle("active", section.id === page);
-    });
+  const result = await verifyResponse.json();
 
-    document.querySelectorAll(".nav-button").forEach(button => {
-      button.classList.toggle("active", button.dataset.page === page);
-    });
-
-    const titles = {
-      dashboard: "Dashboard",
-      verify: "Verify Certificate",
-      register: "Register Certificate",
-      institutions: "Institution Management"
-    };
-
-    $("pageTitle").textContent = titles[page] || "Dashboard";
-    $("sidebar").classList.remove("open");
-    window.scrollTo(0, 0);
+  if (!verifyResponse.ok || !result.success || !result.token) {
+    throw new Error(result.error || "Wallet authentication failed.");
   }
 
-  document.querySelectorAll("[data-page]").forEach(button => {
-    button.addEventListener("click", () => navigate(button.dataset.page));
-  });
+  // Keep the session token in memory only.
+  sessionToken = result.token;
+  return result;
+}
 
-  document.querySelectorAll("[data-go]").forEach(button => {
-    button.addEventListener("click", () => navigate(button.dataset.go));
-  });
+function getAuthorizationHeaders(extraHeaders = {}) {
+  if (!sessionToken) {
+    throw new Error("Your wallet session has expired. Disconnect and reconnect your wallet.");
+  }
+  return {
+    ...extraHeaders,
+    "Authorization":"Bearer " + sessionToken
+  };
+}
 
-  $("menuToggle").addEventListener("click", () => {
-    $("sidebar").classList.toggle("open");
-  });
+// UPLOAD TO PINATA
+async function uploadToPinata(file) {
+  const formData = new FormData();
+  formData.append("certificate",file);
 
-  // RESULT DISPLAY
-  function showResult(id, type, title, message) {
-    const box = $(id);
-    box.className = "result " + type;
+  let response;
+  try {
+    response = await fetch(UPLOAD_API_URL,{
+      method:"POST",
+      headers:getAuthorizationHeaders(),
+      body:formData
+    });
+  } catch (error) {
+    if (error.message && error.message.includes("session")) throw error;
+    throw new Error("Could not connect to the upload server. Make sure your backend is running.");
+  }
+
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("The upload server returned an invalid response.");
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    sessionToken = null;
+    throw new Error("Your wallet session is invalid or expired. Reconnect your wallet.");
+  }
+
+  if (!response.ok || !result.success || !result.cid) {
+    throw new Error(result.error || "Certificate upload failed.");
+  }
+  return result;
+}
+
+// SAVE METADATA TO SQLITE
+async function saveCertificateMetadata(data) {
+  let response;
+  try {
+    response = await fetch(METADATA_API_URL,{
+      method:"POST",
+      headers:getAuthorizationHeaders({"Content-Type":"application/json"}),
+      body:JSON.stringify(data)
+    });
+  } catch (error) {
+    if (error.message && error.message.includes("session")) throw error;
+    throw new Error("Could not connect to the metadata database.");
+  }
+
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("The metadata server returned an invalid response.");
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    sessionToken = null;
+    throw new Error("Your wallet session is invalid or expired. Reconnect your wallet.");
+  }
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "Could not save certificate metadata.");
+  }
+  return result;
+}
+
+// PUBLIC METADATA RETRIEVAL — NO WALLET TOKEN REQUIRED
+async function getCertificateMetadata(hash) {
+  let response;
+  try {
+    response = await fetch(METADATA_API_URL + "/" + encodeURIComponent(hash));
+  } catch {
+    throw new Error("Metadata service is unavailable.");
+  }
+
+  if (response.status === 404) return null;
+
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Invalid metadata server response.");
+  }
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "Could not retrieve certificate metadata.");
+  }
+  return result.metadata || null;
+}
+
+function formatDate(timestamp) {
+  return new Date(Number(timestamp) * 1000).toLocaleString();
+}
+
+// VERIFICATION
+$("verifyForm").addEventListener("submit",async event => {
+  event.preventDefault();
+  const button = $("verifyButton");
+  button.disabled = true;
+
+  showResult("verifyResult","info","Checking certificate","Calculating document fingerprint and checking the blockchain...");
+
+  try {
+    const file = $("verifyFile").files[0];
+    const hash = await calculateDocumentHash(file);
+    const record = await readContract.verifyCertificate(hash);
+
+    if (!record.exists) {
+      showResult("verifyResult","failure","Certificate not found","This exact document has not been registered on CertiChain.");
+      return;
+    }
+
+    const box = $("verifyResult");
+    box.className = record.revoked ? "result failure" : "result success";
     box.replaceChildren();
 
     const heading = document.createElement("strong");
-    heading.textContent = title;
+    heading.textContent = record.revoked ? "Certificate revoked" : "Certificate verified";
     box.appendChild(heading);
-    box.appendChild(document.createTextNode(message));
-  }
+    box.appendChild(document.createTextNode(
+      record.revoked
+        ? "This certificate was registered but has been revoked."
+        : "This exact document is registered on the blockchain."
+    ));
 
-  function addDetail(parent, label, value) {
-    const line = document.createElement("p");
-    line.className = "detail-line";
-
-    const strong = document.createElement("strong");
-    strong.textContent = label + ": ";
-
-    line.appendChild(strong);
-    line.appendChild(document.createTextNode(String(value)));
-    parent.appendChild(line);
-  }
-
-  function addLink(parent, url, label) {
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.className = "explorer";
-    link.textContent = label;
-    parent.appendChild(link);
-  }
-
-  function setWalletStatus(message, state) {
-    $("dashboardWallet").textContent = message;
-    $("dashboardWallet").className =
-      "wallet-status" + (state ? " " + state : "");
-  }
-
-  // FILE VALIDATION AND HASHING
-  async function calculateDocumentHash(file) {
-    if (!file) throw new Error("Select a certificate file.");
-
-    const allowed = ["application/pdf", "image/png", "image/jpeg"];
-
-    if (!allowed.includes(file.type)) {
-      throw new Error("Only PDF, PNG and JPEG files are supported.");
-    }
-
-    if (file.size === 0) {
-      throw new Error("The selected file is empty.");
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error("File is too large. Maximum size is 10 MB.");
-    }
-
-    if (!window.crypto || !window.crypto.subtle) {
-      throw new Error("Secure hashing requires HTTPS or localhost.");
-    }
-
-    const buffer = await file.arrayBuffer();
-    const digest = await crypto.subtle.digest("SHA-256", buffer);
-
-    return ethers.hexlify(new Uint8Array(digest));
-  }
-
-  // UPLOAD TO PINATA
-  async function uploadToPinata(file) {
-    const formData = new FormData();
-    formData.append("certificate", file);
-
-    let response;
+    addDetail(box,"Issuer",record.issuer);
+    addDetail(box,"Registered on",formatDate(record.registeredAt));
+    addDetail(box,"SHA-256",hash);
 
     try {
-      response = await fetch(UPLOAD_API_URL, {
-        method: "POST",
-        body: formData
+      const metadata = await getCertificateMetadata(hash);
+      if (metadata) {
+        addDetail(box,"Original file name",metadata.fileName);
+        addDetail(box,"IPFS CID",metadata.ipfsCid);
+
+        if (metadata.ipfsCid) {
+          addLink(box,IPFS_GATEWAY + encodeURIComponent(metadata.ipfsCid),"View original certificate on IPFS");
+        }
+        if (metadata.transactionHash) {
+          addLink(box,"https://sepolia.etherscan.io/tx/" + encodeURIComponent(metadata.transactionHash),"View registration transaction");
+        }
+      } else {
+        addDetail(box,"IPFS metadata","No saved metadata is available for this certificate.");
+      }
+    } catch (metadataError) {
+      console.error("Metadata retrieval error:",metadataError);
+      addDetail(box,"IPFS metadata","Metadata service is currently unavailable.");
+    }
+
+    addLink(box,"https://sepolia.etherscan.io/address/" + CONTRACT_ADDRESS,"View contract on Etherscan");
+  } catch (error) {
+    console.error(error);
+    showResult("verifyResult","failure","Verification failed",error.shortMessage || error.message || "Could not reach the blockchain.");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// WALLET CONNECTION
+function resetWallet(message) {
+  signer = null;
+  walletContract = null;
+  sessionToken = null;
+  isOwner = false;
+  isAuthorized = false;
+
+  $("registerForm").classList.add("hidden");
+  $("institutionNav").classList.add("hidden");
+  $("registerAccess").textContent = message || "Connect an authorized wallet to access registration.";
+  $("connectButton").textContent = "Connect Wallet";
+  setWalletStatus(message || "No wallet connected.","bad");
+}
+
+async function authorizeProvider(rawProvider) {
+  const accounts = await rawProvider.request({method:"eth_requestAccounts"});
+
+  if (!accounts || !accounts.length) {
+    throw new Error("No wallet account returned.");
+  }
+
+  const provider = new ethers.BrowserProvider(rawProvider);
+  const network = await provider.getNetwork();
+
+  if (network.chainId !== SEPOLIA_CHAIN_ID) {
+    throw new Error("Switch your wallet to Ethereum Sepolia and reconnect.");
+  }
+
+  signer = await provider.getSigner();
+  walletContract = new ethers.Contract(CONTRACT_ADDRESS,ABI,signer);
+
+  const address = await signer.getAddress();
+  const ownerAddress = await walletContract.owner();
+
+  isOwner = address.toLowerCase() === ownerAddress.toLowerCase();
+  isAuthorized = isOwner || await walletContract.authorizedInstitutions(address);
+
+  if (!isAuthorized) {
+    resetWallet("Wallet connected, but this address is not authorized to register certificates.");
+    $("connectButton").textContent = "Reconnect Wallet";
+    return;
+  }
+
+  // Authenticate with the backend only after checking on-chain permissions.
+  setWalletStatus("Wallet authorized. Please sign the backend authentication request...");
+  $("registerAccess").textContent = "Authenticating your wallet with the secure backend...";
+
+  try {
+    await authenticateWallet(address);
+  } catch (error) {
+    resetWallet("Wallet authorization succeeded, but backend authentication failed: " + error.message);
+    throw error;
+  }
+
+  $("registerForm").classList.remove("hidden");
+  $("registerAccess").textContent = "Authorized wallet authenticated. You can now register certificates.";
+  $("institutionNav").classList.toggle("hidden",!isOwner);
+
+  setWalletStatus(
+    (isOwner ? "Administrator" : "Authorized institution") +
+    " authenticated: " + address,
+    "ok"
+  );
+
+  $("connectButton").textContent = "Wallet Connected";
+
+  if (rawProvider.on) {
+    rawProvider.on("accountsChanged",() => resetWallet("Wallet account changed. Reconnect."));
+    rawProvider.on("chainChanged",() => resetWallet("Wallet network changed. Reconnect."));
+    rawProvider.on("disconnect",() => resetWallet("Wallet disconnected."));
+  }
+}
+
+async function connectBrowserWallet() {
+  try {
+    if (!window.ethereum) {
+      throw new Error("No browser wallet detected. Install or enable a wallet extension.");
+    }
+    $("connectButton").disabled = true;
+    setWalletStatus("Connecting to browser wallet...");
+    await authorizeProvider(window.ethereum);
+  } catch (error) {
+    console.error(error);
+    resetWallet(error.shortMessage || error.message || "Connection failed.");
+  } finally {
+    $("connectButton").disabled = false;
+  }
+}
+
+async function connectWalletConnect() {
+  if (!walletConnectProvider) {
+    const module = await import("https://esm.sh/@walletconnect/ethereum-provider@2.26.0?bundle");
+    const EthereumProvider = module.EthereumProvider || module.default;
+
+    walletConnectProvider = await EthereumProvider.init({
+      projectId:WALLETCONNECT_PROJECT_ID,
+      chains:[Number(SEPOLIA_CHAIN_ID)],
+      optionalChains:[Number(SEPOLIA_CHAIN_ID)],
+      showQrModal:true,
+      methods:[
+        "eth_sendTransaction",
+        "personal_sign",
+        "eth_sign",
+        "eth_signTypedData",
+        "eth_signTypedData_v4"
+      ],
+      events:["chainChanged","accountsChanged"],
+      rpcMap:{[Number(SEPOLIA_CHAIN_ID)]:PUBLIC_RPC},
+      metadata:{
+        name:"CertiChain",
+        description:"Blockchain Certificate Verification",
+        url:APP_URL,
+        icons:[APP_URL + "/favicon.ico"]
+      }
+    });
+  }
+
+  await walletConnectProvider.connect({chains:[Number(SEPOLIA_CHAIN_ID)]});
+  await authorizeProvider(walletConnectProvider);
+}
+
+$("connectButton").addEventListener("click",async () => {
+  $("connectButton").disabled = true;
+  try {
+    if (window.ethereum) {
+      await connectBrowserWallet();
+    } else {
+      await connectWalletConnect();
+    }
+  } catch (error) {
+    console.error(error);
+    resetWallet(error.shortMessage || error.message || "Wallet connection failed.");
+  } finally {
+    $("connectButton").disabled = false;
+  }
+});
+
+// REGISTRATION: PINATA + ETHEREUM + SQLITE
+$("registerForm").addEventListener("submit",async event => {
+  event.preventDefault();
+  const button = $("registerButton");
+
+  if (!isAuthorized || !walletContract || !signer || !sessionToken) {
+    showResult("registerResult","failure","Access denied","Connect and authenticate an authorized wallet first.");
+    return;
+  }
+
+  button.disabled = true;
+  let uploadResult = null;
+  let transactionSucceeded = false;
+  let registrationHash = null;
+  let transactionHash = null;
+
+  try {
+    const file = $("registerFile").files[0];
+    if (!file) throw new Error("Please select a certificate document.");
+
+    showResult("registerResult","info","Checking certificate","Calculating SHA-256 fingerprint and checking for an existing registration...");
+    const hash = await calculateDocumentHash(file);
+    registrationHash = hash;
+
+    const existingRecord = await readContract.verifyCertificate(hash);
+    if (existingRecord.exists) {
+      throw new Error(existingRecord.revoked
+        ? "This document has already been registered and subsequently revoked."
+        : "This document is already registered on CertiChain.");
+    }
+
+    showResult("registerResult","info","Uploading certificate","Uploading the original document to Pinata IPFS. Please wait...");
+    uploadResult = await uploadToPinata(file);
+    const cid = uploadResult.cid;
+
+    showResult("registerResult","info","Confirm transaction","Document uploaded to IPFS. Approve the certificate registration transaction in your wallet.");
+    const tx = await walletContract.registerCertificate(hash);
+    transactionHash = tx.hash;
+
+    showResult("registerResult","info","Transaction submitted","Your transaction has been submitted. Waiting for confirmation on Ethereum Sepolia...");
+    console.log("Transaction submitted:",tx.hash);
+
+    const receipt = await tx.wait(1);
+    console.log("Transaction receipt:",receipt);
+
+    if (!receipt || Number(receipt.status) !== 1) {
+      throw new Error("Ethereum registration transaction failed.");
+    }
+    transactionSucceeded = true;
+
+    showResult("registerResult","info","Transaction confirmed","Ethereum has successfully registered your certificate. Saving its IPFS metadata...");
+
+    let registeredAt;
+    try {
+      const block = await readProvider.getBlock(receipt.blockNumber);
+      registeredAt = block
+        ? new Date(Number(block.timestamp) * 1000).toISOString()
+        : new Date().toISOString();
+    } catch (timestampError) {
+      console.warn("Could not retrieve block timestamp:",timestampError);
+      registeredAt = new Date().toISOString();
+    }
+
+    let metadataSaved = false;
+    let metadataErrorMessage = "";
+
+    try {
+      await saveCertificateMetadata({
+        documentHash:hash,
+        ipfsCid:cid,
+        fileName:file.name,
+        issuer:await signer.getAddress(),
+        transactionHash:tx.hash,
+        registeredAt
       });
-    } catch {
-      throw new Error(
-        "Could not connect to the upload server. Make sure your backend is running."
-      );
+      metadataSaved = true;
+    } catch (metadataError) {
+      console.error("Metadata save error:",metadataError);
+      metadataErrorMessage = metadataError.message;
     }
-
-    let result;
-
-    try {
-      result = await response.json();
-    } catch {
-      throw new Error("The upload server returned an invalid response.");
-    }
-
-    if (!response.ok || !result.success || !result.cid) {
-      throw new Error(result.error || "Certificate upload failed.");
-    }
-
-    return result;
-  }
-
-  // SAVE METADATA TO SQLITE
-  async function saveCertificateMetadata(data) {
-    let response;
-
-    try {
-      response = await fetch(METADATA_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      });
-    } catch {
-      throw new Error("Could not connect to the metadata database.");
-    }
-
-    let result;
-
-    try {
-      result = await response.json();
-    } catch {
-      throw new Error("The metadata server returned an invalid response.");
-    }
-
-    if (!response.ok || !result.success) {
-      throw new Error(
-        result.error || "Could not save certificate metadata."
-      );
-    }
-
-    return result;
-  }
-
-  // RETRIEVE METADATA FROM SQLITE
-  async function getCertificateMetadata(hash) {
-    let response;
-
-    try {
-      response = await fetch(
-        METADATA_API_URL + "/" + encodeURIComponent(hash)
-      );
-    } catch {
-      throw new Error("Metadata service is unavailable.");
-    }
-
-    if (response.status === 404) {
-      return null;
-    }
-
-    let result;
-
-    try {
-      result = await response.json();
-    } catch {
-      throw new Error("Invalid metadata server response.");
-    }
-
-    if (!response.ok || !result.success) {
-      throw new Error(
-        result.error || "Could not retrieve certificate metadata."
-      );
-    }
-
-    // The backend returns the record as result.metadata.
-    return result.metadata || null;
-  }
-
-  function formatDate(timestamp) {
-    return new Date(Number(timestamp) * 1000).toLocaleString();
-  }
-
-  // VERIFICATION
-  $("verifyForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const button = $("verifyButton");
-    button.disabled = true;
 
     showResult(
-      "verifyResult",
-      "info",
-      "Checking certificate",
-      "Calculating document fingerprint and checking the blockchain..."
+      "registerResult",
+      metadataSaved ? "success" : "info",
+      metadataSaved ? "Certificate registered successfully" : "Blockchain registration successful — metadata saving needs attention",
+      metadataSaved
+        ? "The original document was uploaded to Pinata IPFS, its SHA-256 fingerprint was recorded on Ethereum, and its metadata was saved in SQLite."
+        : "The certificate was successfully registered on Ethereum and uploaded to IPFS, but its metadata could not be saved to SQLite."
     );
 
-    try {
-      const file = $("verifyFile").files[0];
-      const hash = await calculateDocumentHash(file);
-      const record = await readContract.verifyCertificate(hash);
+    const box = $("registerResult");
+    addDetail(box,"File name",file.name);
+    addDetail(box,"SHA-256",hash);
+    addDetail(box,"IPFS CID",cid);
+    addDetail(box,"Transaction hash",tx.hash);
+    addDetail(box,"Metadata saved",metadataSaved ? "Yes" : "No");
 
-      if (!record.exists) {
-        showResult(
-          "verifyResult",
-          "failure",
-          "Certificate not found",
-          "This exact document has not been registered on CertiChain."
-        );
-        return;
+    if (!metadataSaved) addDetail(box,"Metadata warning",metadataErrorMessage);
+
+    addLink(box,IPFS_GATEWAY + encodeURIComponent(cid),"View uploaded certificate on IPFS");
+    addLink(box,"https://sepolia.etherscan.io/tx/" + tx.hash,"View registration transaction");
+    $("registerForm").reset();
+
+  } catch (error) {
+    console.error(error);
+
+    if (transactionSucceeded) {
+      showResult("registerResult","info","Blockchain registration successful","The Ethereum registration succeeded, but a later operation encountered a problem. Check the transaction before retrying.");
+      if (registrationHash) addDetail($("registerResult"),"SHA-256",registrationHash);
+      if (transactionHash) {
+        addDetail($("registerResult"),"Transaction hash",transactionHash);
+        addLink($("registerResult"),"https://sepolia.etherscan.io/tx/" + transactionHash,"View registration transaction");
       }
-
-      const box = $("verifyResult");
-      box.className = record.revoked ? "result failure" : "result success";
-      box.replaceChildren();
-
-      const heading = document.createElement("strong");
-      heading.textContent = record.revoked
-        ? "Certificate revoked"
-        : "Certificate verified";
-
-      box.appendChild(heading);
-      box.appendChild(document.createTextNode(
-        record.revoked
-          ? "This certificate was registered but has been revoked."
-          : "This exact document is registered on the blockchain."
-      ));
-
-      addDetail(box, "Issuer", record.issuer);
-      addDetail(box, "Registered on", formatDate(record.registeredAt));
-      addDetail(box, "SHA-256", hash);
-
-      // Retrieve the associated IPFS CID from SQLite.
-      try {
-        const metadata = await getCertificateMetadata(hash);
-
-        if (metadata) {
-          // These field names match the backend's camelCase response.
-          addDetail(box, "Original file name", metadata.fileName);
-          addDetail(box, "IPFS CID", metadata.ipfsCid);
-
-          if (metadata.ipfsCid) {
-            addLink(
-              box,
-              IPFS_GATEWAY + encodeURIComponent(metadata.ipfsCid),
-              "View original certificate on IPFS"
-            );
-          }
-
-          if (metadata.transactionHash) {
-            addLink(
-              box,
-              "https://sepolia.etherscan.io/tx/" +
-                encodeURIComponent(metadata.transactionHash),
-              "View registration transaction"
-            );
-          }
-        } else {
-          addDetail(
-            box,
-            "IPFS metadata",
-            "No saved metadata is available for this certificate."
-          );
-        }
-      } catch (metadataError) {
-        console.error("Metadata retrieval error:", metadataError);
-
-        addDetail(
-          box,
-          "IPFS metadata",
-          "Metadata service is currently unavailable."
-        );
+      if (uploadResult && uploadResult.cid) {
+        addDetail($("registerResult"),"IPFS CID",uploadResult.cid);
+        addLink($("registerResult"),IPFS_GATEWAY + encodeURIComponent(uploadResult.cid),"View uploaded document");
       }
-
-      addLink(
-        box,
-        "https://sepolia.etherscan.io/address/" + CONTRACT_ADDRESS,
-        "View contract on Etherscan"
-      );
-
-    } catch (error) {
-      console.error(error);
-
-      showResult(
-        "verifyResult",
-        "failure",
-        "Verification failed",
-        error.shortMessage || error.message ||
-          "Could not reach the blockchain."
-      );
-    } finally {
-      button.disabled = false;
+    } else {
+      showResult("registerResult","failure","Registration failed",error.shortMessage || error.reason || error.message || "An unexpected error occurred.");
+      if (uploadResult && uploadResult.cid) {
+        addDetail($("registerResult"),"IPFS CID",uploadResult.cid);
+        addDetail($("registerResult"),"Note","The document was uploaded to IPFS, but blockchain registration did not complete. The uploaded file remains on IPFS.");
+        addLink($("registerResult"),IPFS_GATEWAY + encodeURIComponent(uploadResult.cid),"View uploaded document");
+      }
     }
-  });
+  } finally {
+    button.disabled = false;
+  }
+});
 
-  // WALLET CONNECTION
-  function resetWallet(message) {
-    signer = null;
-    walletContract = null;
-    isOwner = false;
-    isAuthorized = false;
+// REVOCATION
+$("revokeForm").addEventListener("submit",async event => {
+  event.preventDefault();
+  const button = $("revokeButton");
 
-    $("registerForm").classList.add("hidden");
-    $("institutionNav").classList.add("hidden");
-
-    $("registerAccess").textContent =
-      message || "Connect an authorized wallet to access registration.";
-
-    $("connectButton").textContent = "Connect Wallet";
-    setWalletStatus(message || "No wallet connected.", "bad");
+  if (!isAuthorized || !walletContract) {
+    showResult("revokeResult","failure","Access denied","Connect an authorized wallet first.");
+    return;
   }
 
-  async function authorizeProvider(rawProvider) {
-    const accounts = await rawProvider.request({
-      method: "eth_requestAccounts"
-    });
+  button.disabled = true;
+  try {
+    const file = $("revokeFile").files[0];
+    const hash = await calculateDocumentHash(file);
+    const record = await readContract.verifyCertificate(hash);
 
-    if (!accounts || !accounts.length) {
-      throw new Error("No wallet account returned.");
-    }
+    if (!record.exists) throw new Error("This certificate is not registered.");
+    if (record.revoked) throw new Error("This certificate has already been revoked.");
 
-    const provider = new ethers.BrowserProvider(rawProvider);
-    const network = await provider.getNetwork();
+    // The smart contract remains the final authority on who can revoke.
+    showResult("revokeResult","info","Confirm revocation","Approve the revocation transaction in your wallet.");
+    const tx = await walletContract.revokeCertificate(hash);
+    const receipt = await tx.wait();
 
-    if (network.chainId !== SEPOLIA_CHAIN_ID) {
-      throw new Error("Switch your wallet to Ethereum Sepolia and reconnect.");
-    }
+    if (!receipt || Number(receipt.status) !== 1) throw new Error("The revocation transaction was not successful.");
 
-    signer = await provider.getSigner();
-    walletContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    showResult("revokeResult","success","Certificate revoked","The certificate has been marked as revoked on the blockchain.");
+    addDetail($("revokeResult"),"SHA-256",hash);
+    addDetail($("revokeResult"),"Transaction hash",tx.hash);
+    addLink($("revokeResult"),"https://sepolia.etherscan.io/tx/" + tx.hash,"View revocation transaction");
+    $("revokeForm").reset();
+  } catch (error) {
+    console.error(error);
+    showResult("revokeResult","failure","Revocation failed",error.shortMessage || error.reason || error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
 
-    const address = await signer.getAddress();
-    const ownerAddress = await walletContract.owner();
+// ADMIN: AUTHORIZE INSTITUTION
+$("authorizeForm").addEventListener("submit",async event => {
+  event.preventDefault();
+  const button = $("authorizeButton");
+  const address = $("institutionAddress").value.trim();
 
-    isOwner = address.toLowerCase() === ownerAddress.toLowerCase();
-
-    isAuthorized = isOwner ||
-      await walletContract.authorizedInstitutions(address);
-
-    if (!isAuthorized) {
-      resetWallet(
-        "Wallet connected, but this address is not authorized to register certificates."
-      );
-      $("connectButton").textContent = "Reconnect Wallet";
-      return;
-    }
-
-    $("registerForm").classList.remove("hidden");
-
-    $("registerAccess").textContent =
-      "Authorized wallet connected. You can now register certificates.";
-
-    $("institutionNav").classList.toggle("hidden", !isOwner);
-
-    setWalletStatus(
-      (isOwner ? "Administrator" : "Authorized institution") +
-      " connected: " + address,
-      "ok"
-    );
-
-    $("connectButton").textContent = "Wallet Connected";
-
-    if (rawProvider.on) {
-      rawProvider.on("accountsChanged", () =>
-        resetWallet("Wallet account changed. Reconnect."));
-
-      rawProvider.on("chainChanged", () =>
-        resetWallet("Wallet network changed. Reconnect."));
-
-      rawProvider.on("disconnect", () =>
-        resetWallet("Wallet disconnected."));
-    }
+  if (!isOwner || !walletContract) {
+    showResult("adminResult","failure","Administrator access required","Only the contract administrator can authorize institutions.");
+    return;
+  }
+  if (!ethers.isAddress(address)) {
+    showResult("adminResult","failure","Invalid address","Enter a valid Ethereum wallet address.");
+    return;
   }
 
-  async function connectBrowserWallet() {
-    try {
-      if (!window.ethereum) {
-        throw new Error(
-          "No browser wallet detected. Install or enable a wallet extension."
-        );
-      }
+  button.disabled = true;
+  try {
+    showResult("adminResult","info","Confirm authorization","Approve the transaction in your wallet.");
+    const tx = await walletContract.authorizeInstitution(address);
+    const receipt = await tx.wait();
 
-      $("connectButton").disabled = true;
-      setWalletStatus("Connecting to browser wallet...");
+    if (!receipt || Number(receipt.status) !== 1) throw new Error("Authorization transaction failed.");
 
-      await authorizeProvider(window.ethereum);
+    showResult("adminResult","success","Institution authorized","The wallet can now register certificates.");
+    addDetail($("adminResult"),"Institution address",address);
+    addDetail($("adminResult"),"Transaction hash",tx.hash);
+    addLink($("adminResult"),"https://sepolia.etherscan.io/tx/" + tx.hash,"View authorization transaction");
+    $("authorizeForm").reset();
+  } catch (error) {
+    console.error(error);
+    showResult("adminResult","failure","Authorization failed",error.shortMessage || error.reason || error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
 
-    } catch (error) {
-      console.error(error);
-      resetWallet(
-        error.shortMessage || error.message || "Connection failed."
-      );
-    } finally {
-      $("connectButton").disabled = false;
-    }
+// ADMIN: REMOVE INSTITUTION
+$("removeForm").addEventListener("submit",async event => {
+  event.preventDefault();
+  const button = $("removeButton");
+  const address = $("removeAddress").value.trim();
+
+  if (!isOwner || !walletContract) {
+    showResult("removeResult","failure","Administrator access required","Only the administrator can remove institutions.");
+    return;
+  }
+  if (!ethers.isAddress(address)) {
+    showResult("removeResult","failure","Invalid address","Enter a valid Ethereum wallet address.");
+    return;
   }
 
-  async function connectWalletConnect() {
-    if (!walletConnectProvider) {
-      const module = await import(
-        "https://esm.sh/@walletconnect/ethereum-provider@2.26.0?bundle"
-      );
+  button.disabled = true;
+  try {
+    showResult("removeResult","info","Confirm removal","Approve the transaction in your wallet.");
+    const tx = await walletContract.removeInstitution(address);
+    const receipt = await tx.wait();
 
-      const EthereumProvider =
-        module.EthereumProvider || module.default;
+    if (!receipt || Number(receipt.status) !== 1) throw new Error("Removal transaction failed.");
 
-      walletConnectProvider = await EthereumProvider.init({
-        projectId: WALLETCONNECT_PROJECT_ID,
-        chains: [Number(SEPOLIA_CHAIN_ID)],
-        optionalChains: [Number(SEPOLIA_CHAIN_ID)],
-        showQrModal: true,
-        methods: [
-          "eth_sendTransaction",
-          "personal_sign",
-          "eth_sign",
-          "eth_signTypedData",
-          "eth_signTypedData_v4"
-        ],
-        events: ["chainChanged", "accountsChanged"],
-        rpcMap: { [Number(SEPOLIA_CHAIN_ID)]: PUBLIC_RPC },
-        metadata: {
-          name: "CertiChain",
-          description: "Blockchain Certificate Verification",
-          url: APP_URL,
-          icons: [APP_URL + "/favicon.ico"]
-        }
-      });
-    }
-
-    await walletConnectProvider.connect({
-      chains: [Number(SEPOLIA_CHAIN_ID)]
-    });
-
-    await authorizeProvider(walletConnectProvider);
+    showResult("removeResult","success","Institution removed","This wallet can no longer register new certificates.");
+    addDetail($("removeResult"),"Institution address",address);
+    addDetail($("removeResult"),"Transaction hash",tx.hash);
+    addLink($("removeResult"),"https://sepolia.etherscan.io/tx/" + tx.hash,"View removal transaction");
+    $("removeForm").reset();
+  } catch (error) {
+    console.error(error);
+    showResult("removeResult","failure","Removal failed",error.shortMessage || error.reason || error.message);
+  } finally {
+    button.disabled = false;
   }
-
-  $("connectButton").addEventListener("click", async () => {
-    $("connectButton").disabled = true;
-
-    try {
-      if (window.ethereum) {
-        await connectBrowserWallet();
-      } else {
-        await connectWalletConnect();
-      }
-    } catch (error) {
-      console.error(error);
-
-      resetWallet(
-        error.shortMessage || error.message ||
-          "Wallet connection failed."
-      );
-    } finally {
-      $("connectButton").disabled = false;
-    }
-  });
-
-  // REGISTRATION: PINATA + ETHEREUM + SQLITE
-  $("registerForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const button = $("registerButton");
-
-    if (!isAuthorized || !walletContract || !signer) {
-      showResult(
-        "registerResult",
-        "failure",
-        "Access denied",
-        "Connect an authorized wallet first."
-      );
-      return;
-    }
-
-    button.disabled = true;
-
-    let uploadResult = null;
-    let transactionSucceeded = false;
-    let registrationHash = null;
-    let transactionHash = null;
-
-    try {
-      const file = $("registerFile").files[0];
-
-      if (!file) {
-        throw new Error("Please select a certificate document.");
-      }
-
-      showResult(
-        "registerResult",
-        "info",
-        "Checking certificate",
-        "Calculating SHA-256 fingerprint and checking for an existing registration..."
-      );
-
-      const hash = await calculateDocumentHash(file);
-      registrationHash = hash;
-
-      const existingRecord = await readContract.verifyCertificate(hash);
-
-      if (existingRecord.exists) {
-        throw new Error(
-          existingRecord.revoked
-            ? "This document has already been registered and subsequently revoked."
-            : "This document is already registered on CertiChain."
-        );
-      }
-
-      showResult(
-        "registerResult",
-        "info",
-        "Uploading certificate",
-        "Uploading the original document to Pinata IPFS. Please wait..."
-      );
-
-      uploadResult = await uploadToPinata(file);
-      const cid = uploadResult.cid;
-
-      showResult(
-        "registerResult",
-        "info",
-        "Confirm transaction",
-        "Document uploaded to IPFS. Approve the certificate registration transaction in your wallet."
-      );
-
-      const tx = await walletContract.registerCertificate(hash);
-      transactionHash = tx.hash;
-
-      showResult(
-        "registerResult",
-        "info",
-        "Transaction submitted",
-        "Your transaction has been submitted. Waiting for confirmation on Ethereum Sepolia..."
-      );
-
-      console.log("Transaction submitted:", tx.hash);
-
-      const receipt = await tx.wait(1);
-
-      console.log("Transaction receipt:", receipt);
-
-      if (!receipt || Number(receipt.status) !== 1) {
-        throw new Error("Ethereum registration transaction failed.");
-      }
-
-      transactionSucceeded = true;
-
-      showResult(
-        "registerResult",
-        "info",
-        "Transaction confirmed",
-        "Ethereum has successfully registered your certificate. Saving its IPFS metadata..."
-      );
-
-      // Get the actual registration timestamp from the confirmed block.
-      let registeredAt;
-
-      try {
-        const block = await readProvider.getBlock(receipt.blockNumber);
-
-        registeredAt = block
-          ? new Date(Number(block.timestamp) * 1000).toISOString()
-          : new Date().toISOString();
-      } catch (timestampError) {
-        console.warn("Could not retrieve block timestamp:", timestampError);
-        registeredAt = new Date().toISOString();
-      }
-
-      // Save metadata after successful blockchain registration.
-      let metadataSaved = false;
-      let metadataErrorMessage = "";
-
-      try {
-        await saveCertificateMetadata({
-          documentHash: hash,
-          ipfsCid: cid,
-          fileName: file.name,
-          issuer: await signer.getAddress(),
-          transactionHash: tx.hash,
-          registeredAt: registeredAt
-        });
-
-        metadataSaved = true;
-
-      } catch (metadataError) {
-        console.error("Metadata save error:", metadataError);
-        metadataErrorMessage = metadataError.message;
-      }
-
-      showResult(
-        "registerResult",
-        metadataSaved ? "success" : "info",
-        metadataSaved
-          ? "Certificate registered successfully"
-          : "Blockchain registration successful — metadata saving needs attention",
-        metadataSaved
-          ? "The original document was uploaded to Pinata IPFS, its SHA-256 fingerprint was recorded on Ethereum, and its metadata was saved in SQLite."
-          : "The certificate was successfully registered on Ethereum and uploaded to IPFS, but its metadata could not be saved to SQLite."
-      );
-
-      const box = $("registerResult");
-
-      addDetail(box, "File name", file.name);
-      addDetail(box, "SHA-256", hash);
-      addDetail(box, "IPFS CID", cid);
-      addDetail(box, "Transaction hash", tx.hash);
-      addDetail(box, "Metadata saved", metadataSaved ? "Yes" : "No");
-
-      if (!metadataSaved) {
-        addDetail(box, "Metadata warning", metadataErrorMessage);
-      }
-
-      addLink(
-        box,
-        IPFS_GATEWAY + encodeURIComponent(cid),
-        "View uploaded certificate on IPFS"
-      );
-
-      addLink(
-        box,
-        "https://sepolia.etherscan.io/tx/" + tx.hash,
-        "View registration transaction"
-      );
-
-      $("registerForm").reset();
-
-    } catch (error) {
-      console.error(error);
-
-      if (transactionSucceeded) {
-        showResult(
-          "registerResult",
-          "info",
-          "Blockchain registration successful",
-          "The Ethereum registration succeeded, but a later operation encountered a problem. Check the transaction before retrying."
-        );
-
-        if (registrationHash) {
-          addDetail($("registerResult"), "SHA-256", registrationHash);
-        }
-
-        if (transactionHash) {
-          addDetail($("registerResult"), "Transaction hash", transactionHash);
-          addLink(
-            $("registerResult"),
-            "https://sepolia.etherscan.io/tx/" + transactionHash,
-            "View registration transaction"
-          );
-        }
-
-        if (uploadResult && uploadResult.cid) {
-          addDetail($("registerResult"), "IPFS CID", uploadResult.cid);
-          addLink(
-            $("registerResult"),
-            IPFS_GATEWAY + encodeURIComponent(uploadResult.cid),
-            "View uploaded document"
-          );
-        }
-
-      } else {
-        showResult(
-          "registerResult",
-          "failure",
-          "Registration failed",
-          error.shortMessage || error.reason || error.message ||
-            "An unexpected error occurred."
-        );
-
-        if (uploadResult && uploadResult.cid) {
-          addDetail(
-            $("registerResult"),
-            "IPFS CID",
-            uploadResult.cid
-          );
-
-          addDetail(
-            $("registerResult"),
-            "Note",
-            "The document was uploaded to IPFS, but blockchain registration did not complete. The uploaded file remains on IPFS."
-          );
-
-          addLink(
-            $("registerResult"),
-            IPFS_GATEWAY + encodeURIComponent(uploadResult.cid),
-            "View uploaded document"
-          );
-        }
-      }
-
-    } finally {
-      button.disabled = false;
-    }
-  });
-
-  // REVOCATION
-  $("revokeForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const button = $("revokeButton");
-
-    if (!isAuthorized || !walletContract) {
-      showResult(
-        "revokeResult",
-        "failure",
-        "Access denied",
-        "Connect an authorized wallet first."
-      );
-      return;
-    }
-
-    button.disabled = true;
-
-    try {
-      const file = $("revokeFile").files[0];
-      const hash = await calculateDocumentHash(file);
-
-      const record = await readContract.verifyCertificate(hash);
-
-      if (!record.exists) {
-        throw new Error("This certificate is not registered.");
-      }
-
-      if (record.revoked) {
-        throw new Error("This certificate has already been revoked.");
-      }
-
-      showResult(
-        "revokeResult",
-        "info",
-        "Confirm revocation",
-        "Approve the revocation transaction in your wallet."
-      );
-
-      const tx = await walletContract.revokeCertificate(hash);
-      const receipt = await tx.wait();
-
-      if (!receipt || Number(receipt.status) !== 1) {
-        throw new Error("The revocation transaction was not successful.");
-      }
-
-      showResult(
-        "revokeResult",
-        "success",
-        "Certificate revoked",
-        "The certificate has been marked as revoked on the blockchain."
-      );
-
-      addDetail($("revokeResult"), "SHA-256", hash);
-      addDetail($("revokeResult"), "Transaction hash", tx.hash);
-
-      addLink(
-        $("revokeResult"),
-        "https://sepolia.etherscan.io/tx/" + tx.hash,
-        "View revocation transaction"
-      );
-
-      $("revokeForm").reset();
-
-    } catch (error) {
-      console.error(error);
-
-      showResult(
-        "revokeResult",
-        "failure",
-        "Revocation failed",
-        error.shortMessage || error.reason || error.message
-      );
-    } finally {
-      button.disabled = false;
-    }
-  });
-
-  // ADMIN: AUTHORIZE INSTITUTION
-  $("authorizeForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const button = $("authorizeButton");
-    const address = $("institutionAddress").value.trim();
-
-    if (!isOwner || !walletContract) {
-      showResult(
-        "adminResult",
-        "failure",
-        "Administrator access required",
-        "Only the contract administrator can authorize institutions."
-      );
-      return;
-    }
-
-    if (!ethers.isAddress(address)) {
-      showResult(
-        "adminResult",
-        "failure",
-        "Invalid address",
-        "Enter a valid Ethereum wallet address."
-      );
-      return;
-    }
-
-    button.disabled = true;
-
-    try {
-      showResult(
-        "adminResult",
-        "info",
-        "Confirm authorization",
-        "Approve the transaction in your wallet."
-      );
-
-      const tx = await walletContract.authorizeInstitution(address);
-      const receipt = await tx.wait();
-
-      if (!receipt || Number(receipt.status) !== 1) {
-        throw new Error("Authorization transaction failed.");
-      }
-
-      showResult(
-        "adminResult",
-        "success",
-        "Institution authorized",
-        "The wallet can now register certificates."
-      );
-
-      addDetail($("adminResult"), "Institution address", address);
-      addDetail($("adminResult"), "Transaction hash", tx.hash);
-
-      addLink(
-        $("adminResult"),
-        "https://sepolia.etherscan.io/tx/" + tx.hash,
-        "View authorization transaction"
-      );
-
-      $("authorizeForm").reset();
-
-    } catch (error) {
-      console.error(error);
-
-      showResult(
-        "adminResult",
-        "failure",
-        "Authorization failed",
-        error.shortMessage || error.reason || error.message
-      );
-    } finally {
-      button.disabled = false;
-    }
-  });
-
-  // ADMIN: REMOVE INSTITUTION
-  $("removeForm").addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const button = $("removeButton");
-    const address = $("removeAddress").value.trim();
-
-    if (!isOwner || !walletContract) {
-      showResult(
-        "removeResult",
-        "failure",
-        "Administrator access required",
-        "Only the administrator can remove institutions."
-      );
-      return;
-    }
-
-    if (!ethers.isAddress(address)) {
-      showResult(
-        "removeResult",
-        "failure",
-        "Invalid address",
-        "Enter a valid Ethereum wallet address."
-      );
-      return;
-    }
-
-    button.disabled = true;
-
-    try {
-      showResult(
-        "removeResult",
-        "info",
-        "Confirm removal",
-        "Approve the transaction in your wallet."
-      );
-
-      const tx = await walletContract.removeInstitution(address);
-      const receipt = await tx.wait();
-
-      if (!receipt || Number(receipt.status) !== 1) {
-        throw new Error("Removal transaction failed.");
-      }
-
-      showResult(
-        "removeResult",
-        "success",
-        "Institution removed",
-        "This wallet can no longer register new certificates."
-      );
-
-      addDetail($("removeResult"), "Institution address", address);
-      addDetail($("removeResult"), "Transaction hash", tx.hash);
-
-      addLink(
-        $("removeResult"),
-        "https://sepolia.etherscan.io/tx/" + tx.hash,
-        "View removal transaction"
-      );
-
-      $("removeForm").reset();
-
-    } catch (error) {
-      console.error(error);
-
-      showResult(
-        "removeResult",
-        "failure",
-        "Removal failed",
-        error.shortMessage || error.reason || error.message
-      );
-    } finally {
-      button.disabled = false;
-    }
-  });
+});
 
 })();
 </script>
