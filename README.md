@@ -1,149 +1,165 @@
-<<<<<<< HEAD
-# Sample Hardhat 3 Project (`mocha` and `ethers`)
+# CertiChain V2 — Blockchain-Based Certificate Verification
 
-This project showcases a Hardhat 3 project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+CertiChain is a Web3 certificate registration and verification platform built on Ethereum. It uses smart contracts, SHA-256 document hashing, and IPFS to support transparent and tamper-evident certificate verification.
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
-
-## Project Overview
-
-This example project includes:
-
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
-
-## Usage
-
-### Running Tests
-
-To run all the tests in the project, execute the following command:
-
-```shell
-npx hardhat test
-```
-
-You can also selectively run the Solidity or `mocha` tests:
-
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
-```
-
-### Make a deployment to Sepolia
-
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
-
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
-
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
-=======
-# CertiChain — Blockchain Certificate Verification
-
-CertiChain is a blockchain-powered certificate registration and verification platform built on Ethereum. It explores how smart contracts and Web3 technologies can help verify the authenticity of digital certificates and improve trust in digital credentials.
-
-**Live Demo:** https://certichain-jade.vercel.app
+**Project Status:** Working prototype on Ethereum Sepolia testnet.
 
 ## Overview
 
-Traditional certificate verification can involve manual checks, delays, and difficulties confirming whether a credential is authentic. CertiChain demonstrates a blockchain-based approach in which certificate hashes are registered and verified using an Ethereum smart contract.
+Traditional certificate verification can involve manual processes, delays, and difficulties confirming document authenticity.
 
-The project is designed to explore transparent, tamper-resistant verification without storing the original certificate document directly on the blockchain.
+CertiChain V2 provides a blockchain-based approach:
 
-## Features
+1. An authorized institution uploads a certificate.
+2. The application calculates its SHA-256 hash.
+3. The original document is uploaded to IPFS through Pinata.
+4. The certificate hash and issuer information are registered on Ethereum.
+5. Anyone can verify a document by uploading it and comparing its hash against the blockchain record.
 
-- **Certificate verification:** Check whether a certificate hash has been registered on the blockchain.
-- **Wallet connectivity:** Connect using a compatible browser wallet or a mobile wallet through QR-based connectivity.
-- **Authorized registration:** Restrict certificate registration to the smart contract owner.
-- **Blockchain integration:** Interact with a deployed smart contract on the Ethereum Sepolia testnet.
-- **Certificate hashing:** Generate a hash from a certificate identifier for blockchain verification.
-- **Web-based interface:** Access the application through a browser.
+The original certificate document is not stored directly on the blockchain.
+
+## Key Features
+
+- **Document verification:** Verify PDF, PNG, and JPEG certificates using SHA-256 hashing.
+- **IPFS storage:** Store original certificate documents using Pinata.
+- **Blockchain registration:** Record certificate hashes on Ethereum.
+- **Institution authorization:** Allow the contract administrator to authorize or remove institutions.
+- **Access control:** Restrict registration to the contract owner and authorized institutions.
+- **Certificate revocation:** Allow the owner or original issuer to revoke a certificate.
+- **Metadata storage:** Store supporting certificate information in a local SQLite database.
+- **Wallet connectivity:** Connect using compatible Web3 wallets.
 
 ## Technology Stack
 
-- HTML
-- CSS
-- JavaScript
-- Ethereum
-- Smart contracts
-- Ethers.js
+- Solidity
 - Ethereum Sepolia testnet
-- Wallet connectivity
+- Hardhat 3
+- Ethers.js 6
+- JavaScript, HTML and CSS
+- Node.js and Express.js
+- Pinata and IPFS
+- SQLite and better-sqlite3
+- MetaMask / WalletConnect
 - Vercel
 
-## Network and Contract
+## Smart Contract Deployment
 
-- **Network:** Ethereum Sepolia testnet
-- **Contract address:** `0xBcB907E19DD840D1f31908c20094b0BA90Db128B`
-- **Chain ID:** `11155111`
+**Network:** Ethereum Sepolia  
+**Chain ID:** `11155111`
 
-The application uses the deployed smart contract to register and verify certificate hashes. Registration requires the connected wallet to match the contract owner's address.
+**V2 Contract Address:**
 
-## How to Use
+`0xb5d3027B91c48f2073e83367ADF6eB7cDfb50c8f`
 
-1. Open the [CertiChain live application](https://certichain-jade.vercel.app).
-2. Connect a compatible browser wallet or choose the mobile wallet connection option.
-3. Switch to the Ethereum Sepolia testnet if prompted.
-4. Enter the certificate identifier you want to verify.
-5. Submit the verification request and review the result.
-6. To register a certificate, connect the authorized contract owner's wallet and follow the registration process.
+[View V2 Contract on Etherscan](https://sepolia.etherscan.io/address/0xb5d3027B91c48f2073e83367ADF6eB7cDfb50c8f)
 
-Registration requires the owner's wallet and may require Sepolia test ETH for transaction fees.
+## Architecture
+
+The application consists of three main components:
+
+1. **Frontend:** Provides wallet connectivity, certificate registration, and verification.
+2. **Smart contract:** Handles certificate hashes, issuer permissions, and revocation on Ethereum.
+3. **Backend:** Handles document uploads to IPFS and certificate metadata storage in SQLite.
 
 ## Running Locally
 
-1. Clone this repository:
+### Requirements
 
-   ```bash
-   git clone YOUR_GITHUB_REPOSITORY_URL
-   ```
+- Node.js and npm
+- Git
+- A compatible Ethereum wallet
+- Sepolia test ETH
+- A Pinata account
 
-2. Open the project folder in VS Code.
-3. Open `index.html` in your browser or use the VS Code Live Server extension.
-4. Connect a compatible wallet and select Ethereum Sepolia.
+### 1. Clone the repository
 
-Replace `YOUR_GITHUB_REPOSITORY_URL` with your actual GitHub repository URL after publishing the project.
+```bash
+git clone https://github.com/samuelalikali02-glitch/certichain.git
+cd certichain
+git checkout feature/document-verification
+```
 
-## Security Notes
+### 2. Install dependencies
 
-- Never share or commit wallet seed phrases or private keys.
-- Do not upload `.env` files containing secrets.
-- Certificate hashes can help detect changes, but a hash alone does not establish that a certificate was issued by a legitimate institution.
-- This project currently uses a test network and is intended for demonstration and learning, not as a production credential system.
+```bash
+npm install
+```
 
-## Future Improvements
+### 3. Configure environment variables
 
-- Issuer management and institutional authorization.
-- Certificate metadata and issuer details.
-- QR-code-based certificate verification.
-- Improved transaction feedback and error handling.
-- Deployment to a production blockchain network after security review.
+Create a `.env` file in the project root:
+
+```env
+PINATA_JWT=your_pinata_jwt
+PINATA_GATEWAY=your_pinata_gateway
+PORT=3000
+```
+
+Keep your actual credentials private. Never commit your `.env` file.
+
+### 4. Start the backend
+
+```bash
+node server.cjs
+```
+
+The backend runs at:
+
+`http://localhost:3000`
+
+### 5. Start the frontend
+
+Open `public/index.html` using VS Code Live Server.
+
+Ensure the frontend API URLs point to your running backend.
+
+### 6. Connect your wallet
+
+- Select Ethereum Sepolia.
+- Connect your wallet.
+- Use the contract owner or an authorized institution for certificate registration.
+- Use a separate wallet to test unauthorized registration restrictions.
+
+## Testing
+
+The V2 smart contract test suite includes checks for:
+
+- Certificate registration.
+- Certificate verification.
+- Duplicate registration restrictions.
+- Institution authorization and removal.
+- Access control.
+- Certificate revocation.
+
+The V2 test suite previously completed with 11 passing tests.
+
+## Security and Privacy
+
+- Never publish private keys, seed phrases, or API credentials.
+- Keep `.env` and local database files out of Git.
+- IPFS documents may be publicly accessible. Do not upload real certificates containing personal information without an appropriate privacy and access-control model.
+- A document hash confirms whether a document matches a registered record; it does not independently prove that the issuing institution is legitimate.
+- This project is a testnet prototype and has not been presented as a production-ready credential system.
+
+## Future Development
+
+- Deploy the backend to a secure hosting provider.
+- Implement wallet-signature-based backend authentication.
+- Improve document privacy and access controls.
+- Add QR-code certificate verification.
+- Expand institutional onboarding.
+- Conduct independent smart contract and backend security reviews.
 
 ## Author
 
 **Samuel Alikali**  
-Mechatronics Engineering Student | Web3 Developer in Training
+Final-Year Mechatronics Engineering Student  
+Web3 and Blockchain Development
+
+GitHub: https://github.com/samuelalikali02-glitch
+
+Portfolio: https://samuelalikali02-glitch.github.io/#projects
 
 ## Disclaimer
 
-CertiChain is an educational project demonstrating blockchain-based certificate registration and verification. It is not an official certification authority.
->>>>>>> 44bc52d29937ff944dde80ca819b2291d3d83d94
+CertiChain is an educational and experimental project demonstrating blockchain-based certificate registration and verification. It is not an official certification authority.
