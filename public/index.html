@@ -234,14 +234,15 @@ const CONTRACT_ADDRESS = "0xb5d3027B91c48f2073e83367ADF6eB7cDfb50c8f";
 const SEPOLIA_CHAIN_ID = 11155111n;
 const PUBLIC_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
 const WALLETCONNECT_PROJECT_ID = "9eb8658f7a398bdd0f73e6bb7d7bba20";
-const APP_URL = "https://certichain-jade.vercel.app";
+const APP_URL = "https://certichain-self-pi.vercel.app";
 
-// LOCAL DEVELOPMENT BACKEND.
-// Change these to your hosted HTTPS backend URLs when deploying.
-const UPLOAD_API_URL = "http://localhost:3000/api/upload";
-const METADATA_API_URL = "http://localhost:3000/api/metadata";
-const AUTH_CHALLENGE_URL = "http://localhost:3000/api/auth/challenge";
-const AUTH_VERIFY_URL = "http://localhost:3000/api/auth/verify";
+// PRODUCTION BACKEND (Render + Neon PostgreSQL).
+// For local backend testing, change this to "http://localhost:3000".
+const API_BASE_URL = "https://certichain-ys1l.onrender.com";
+const UPLOAD_API_URL = API_BASE_URL + "/api/upload";
+const METADATA_API_URL = API_BASE_URL + "/api/metadata";
+const AUTH_CHALLENGE_URL = API_BASE_URL + "/api/auth/challenge";
+const AUTH_VERIFY_URL = API_BASE_URL + "/api/auth/verify";
 
 const IPFS_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
 
@@ -434,7 +435,7 @@ async function uploadToPinata(file) {
   return result;
 }
 
-// SAVE METADATA TO SQLITE
+// SAVE METADATA TO NEON POSTGRESQL
 async function saveCertificateMetadata(data) {
   let response;
   try {
@@ -696,7 +697,7 @@ $("connectButton").addEventListener("click",async () => {
   }
 });
 
-// REGISTRATION: PINATA + ETHEREUM + SQLITE
+// REGISTRATION: PINATA + ETHEREUM + NEON POSTGRESQL
 $("registerForm").addEventListener("submit",async event => {
   event.preventDefault();
   const button = $("registerButton");
@@ -782,8 +783,8 @@ $("registerForm").addEventListener("submit",async event => {
       metadataSaved ? "success" : "info",
       metadataSaved ? "Certificate registered successfully" : "Blockchain registration successful — metadata saving needs attention",
       metadataSaved
-        ? "The original document was uploaded to Pinata IPFS, its SHA-256 fingerprint was recorded on Ethereum, and its metadata was saved in SQLite."
-        : "The certificate was successfully registered on Ethereum and uploaded to IPFS, but its metadata could not be saved to SQLite."
+        ? "The original document was uploaded to Pinata IPFS, its SHA-256 fingerprint was recorded on Ethereum, and its metadata was saved in the Neon PostgreSQL database."
+        : "The certificate was successfully registered on Ethereum and uploaded to IPFS, but its metadata could not be saved to the Neon PostgreSQL database."
     );
 
     const box = $("registerResult");
