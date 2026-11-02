@@ -1,11 +1,10 @@
-
 require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const { PinataSDK } = require("pinata");
-const Database = require("better-sqlite3");
+const { Pool } = require("pg");
 const { ethers } = require("ethers");
 const crypto = require("crypto");
 const path = require("path");
@@ -21,7 +20,6 @@ const CONTRACT_ADDRESS =
   "0xb5d3027B91c48f2073e83367ADF6eB7cDfb50c8f";
 
 const SEPOLIA_CHAIN_ID = 11155111n;
-
 const PUBLIC_RPC =
   "https://ethereum-sepolia-rpc.publicnode.com";
 
@@ -32,11 +30,15 @@ if (!AUTH_TOKEN_SECRET || AUTH_TOKEN_SECRET.length < 32) {
 }
 
 if (!process.env.PINATA_JWT) {
-  throw new Error("PINATA_JWT is missing from .env.");
+  throw new Error("PINATA_JWT is missing from environment variables.");
 }
 
 if (!process.env.PINATA_GATEWAY) {
-  throw new Error("PINATA_GATEWAY is missing from .env.");
+  throw new Error("PINATA_GATEWAY is missing from environment variables.");
+}
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is missing from environment variables.");
 }
 
 const ABI = [
@@ -47,16 +49,20 @@ const ABI = [
 ];
 
 const provider = new ethers.JsonRpcProvider(PUBLIC_RPC);
-
-const contract = new ethers.Contract(
-  CONTRACT_ADDRESS,
-  ABI,
-  provider
-);
+const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.PINATA_JWT,
   pinataGateway: process.env.PINATA_GATEWAY
+});
+
+// Neon pooled connection string is recommended for this hosted service.
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 5,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000
 });
 
 // --------------------------------------------------
@@ -66,15 +72,17 @@ const pinata = new PinataSDK({
 const allowedOrigins = new Set([
   "http://localhost:8080",
   "http://127.0.0.1:8080",
-  "https://certichain-jade.vercel.app"
+  "https://certichain-jade.vercel.app",
+  "https://certichain-self-pi.vercel.app"
 ]);
+
+app.set("trust proxy", 1);
 
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.has(origin)) {
       return callback(null, true);
     }
-
     return callback(new Error("Origin not allowed by CORS."));
   }
 }));
@@ -82,63 +90,24 @@ app.use(cors({
 app.use(express.json({ limit: "1mb" }));
 
 // --------------------------------------------------
-// SQLITE DATABASE
+// POSTGRESQL DATABASE
 // --------------------------------------------------
 
-const db = new Database(
-  path.join(__dirname, "certichain.db")
-);
+async function initializeDatabase() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS certificates (
+      document_hash TEXT PRIMARY KEY,
+      ipfs_cid TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      issuer TEXT NOT NULL,
+      transaction_hash TEXT NOT NULL,
+      registered_at TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-db.pragma("journal_mode = WAL");
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS certificates (
-    document_hash TEXT PRIMARY KEY,
-    ipfs_cid TEXT NOT NULL,
-    file_name TEXT NOT NULL,
-    issuer TEXT NOT NULL,
-    transaction_hash TEXT NOT NULL,
-    registered_at TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
-const saveMetadata = db.prepare(`
-  INSERT INTO certificates (
-    document_hash,
-    ipfs_cid,
-    file_name,
-    issuer,
-    transaction_hash,
-    registered_at
-  )
-  VALUES (
-    @documentHash,
-    @ipfsCid,
-    @fileName,
-    @issuer,
-    @transactionHash,
-    @registeredAt
-  )
-`);
-
-const getMetadata = db.prepare(`
-  SELECT
-    document_hash AS documentHash,
-    ipfs_cid AS ipfsCid,
-    file_name AS fileName,
-    issuer,
-    transaction_hash AS transactionHash,
-    registered_at AS registeredAt
-  FROM certificates
-  WHERE lower(document_hash) = lower(?)
-`);
-
-const findMetadata = db.prepare(`
-  SELECT document_hash
-  FROM certificates
-  WHERE lower(document_hash) = lower(?)
-`);
+  console.log("Neon PostgreSQL database connected and initialized.");
+}
 
 // --------------------------------------------------
 // TEMPORARY AUTHENTICATION STORAGE
@@ -154,15 +123,11 @@ function cleanExpiredRecords() {
   const now = Date.now();
 
   for (const [id, challenge] of challenges) {
-    if (challenge.expiresAt < now) {
-      challenges.delete(id);
-    }
+    if (challenge.expiresAt < now) challenges.delete(id);
   }
 
   for (const [token, session] of sessions) {
-    if (session.expiresAt < now) {
-      sessions.delete(token);
-    }
+    if (session.expiresAt < now) sessions.delete(token);
   }
 }
 
@@ -182,11 +147,7 @@ function rateLimit({ windowMs, maxRequests }) {
     let entry = rateLimits.get(key);
 
     if (!entry || now > entry.resetAt) {
-      entry = {
-        count: 0,
-        resetAt: now + windowMs
-      };
-
+      entry = { count: 0, resetAt: now + windowMs };
       rateLimits.set(key, entry);
     }
 
@@ -217,162 +178,147 @@ const uploadRateLimit = rateLimit({
 // WALLET AUTHENTICATION
 // --------------------------------------------------
 
-app.post(
-  "/api/auth/challenge",
-  authRateLimit,
-  async (req, res) => {
-    try {
-      const { address } = req.body || {};
+app.post("/api/auth/challenge", authRateLimit, async (req, res) => {
+  try {
+    const { address } = req.body || {};
 
-      if (!address || !ethers.isAddress(address)) {
-        return res.status(400).json({
-          success: false,
-          error: "A valid wallet address is required."
-        });
-      }
-
-      const normalizedAddress = ethers.getAddress(address);
-
-      const challengeId = crypto.randomUUID();
-      const nonce = crypto.randomBytes(32).toString("hex");
-
-      const message = [
-        "CertiChain Wallet Authentication",
-        "",
-        "Sign this message to authenticate with CertiChain.",
-        "This signature does not authorize a blockchain transaction.",
-        "",
-        `Wallet: ${normalizedAddress}`,
-        `Chain ID: ${SEPOLIA_CHAIN_ID}`,
-        `Nonce: ${nonce}`,
-        `Challenge: ${challengeId}`,
-        `Issued At: ${new Date().toISOString()}`
-      ].join("\n");
-
-      challenges.set(challengeId, {
-        address: normalizedAddress,
-        message,
-        expiresAt: Date.now() + CHALLENGE_LIFETIME
-      });
-
-      return res.json({
-        success: true,
-        challengeId,
-        message,
-        expiresIn: CHALLENGE_LIFETIME / 1000
-      });
-
-    } catch (error) {
-      console.error("Challenge error:", error.message);
-
-      return res.status(500).json({
+    if (!address || !ethers.isAddress(address)) {
+      return res.status(400).json({
         success: false,
-        error: "Could not create authentication challenge."
+        error: "A valid wallet address is required."
       });
     }
+
+    const normalizedAddress = ethers.getAddress(address);
+    const challengeId = crypto.randomUUID();
+    const nonce = crypto.randomBytes(32).toString("hex");
+
+    const message = [
+      "CertiChain Wallet Authentication",
+      "",
+      "Sign this message to authenticate with CertiChain.",
+      "This signature does not authorize a blockchain transaction.",
+      "",
+      `Wallet: ${normalizedAddress}`,
+      `Chain ID: ${SEPOLIA_CHAIN_ID}`,
+      `Nonce: ${nonce}`,
+      `Challenge: ${challengeId}`,
+      `Issued At: ${new Date().toISOString()}`
+    ].join("\n");
+
+    challenges.set(challengeId, {
+      address: normalizedAddress,
+      message,
+      expiresAt: Date.now() + CHALLENGE_LIFETIME
+    });
+
+    return res.json({
+      success: true,
+      challengeId,
+      message,
+      expiresIn: CHALLENGE_LIFETIME / 1000
+    });
+  } catch (error) {
+    console.error("Challenge error:", error.message);
+    return res.status(500).json({
+      success: false,
+      error: "Could not create authentication challenge."
+    });
   }
-);
+});
 
 // --------------------------------------------------
 // VERIFY SIGNATURE AND ISSUE SESSION
 // --------------------------------------------------
 
-app.post(
-  "/api/auth/verify",
-  authRateLimit,
-  async (req, res) => {
-    try {
-      const { challengeId, signature } = req.body || {};
+app.post("/api/auth/verify", authRateLimit, async (req, res) => {
+  try {
+    const { challengeId, signature } = req.body || {};
 
-      if (
-        typeof challengeId !== "string" ||
-        typeof signature !== "string" ||
-        !/^0x[a-fA-F0-9]{130}$/.test(signature)
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid authentication request."
-        });
-      }
-
-      const challenge = challenges.get(challengeId);
-
-      if (!challenge || challenge.expiresAt < Date.now()) {
-        challenges.delete(challengeId);
-
-        return res.status(401).json({
-          success: false,
-          error: "Challenge expired or already used. Reconnect your wallet."
-        });
-      }
-
-      // Consume the challenge before further verification.
-      challenges.delete(challengeId);
-
-      const recoveredAddress = ethers.verifyMessage(
-        challenge.message,
-        signature
-      );
-
-      if (
-        recoveredAddress.toLowerCase() !==
-        challenge.address.toLowerCase()
-      ) {
-        return res.status(401).json({
-          success: false,
-          error: "Wallet signature verification failed."
-        });
-      }
-
-      const network = await provider.getNetwork();
-
-      if (network.chainId !== SEPOLIA_CHAIN_ID) {
-        throw new Error("Backend is connected to the wrong network.");
-      }
-
-      const ownerAddress = await contract.owner();
-
-      const isOwner =
-        recoveredAddress.toLowerCase() ===
-        ownerAddress.toLowerCase();
-
-      const isInstitution = await contract.authorizedInstitutions(
-        recoveredAddress
-      );
-
-      if (!isOwner && !isInstitution) {
-        return res.status(403).json({
-          success: false,
-          error: "This wallet is not authorized to register certificates."
-        });
-      }
-
-      const token = crypto.randomBytes(48).toString("hex");
-
-      sessions.set(token, {
-        address: ethers.getAddress(recoveredAddress),
-        isOwner,
-        expiresAt: Date.now() + SESSION_LIFETIME
-      });
-
-      return res.json({
-        success: true,
-        token,
-        address: ethers.getAddress(recoveredAddress),
-        role: isOwner ? "administrator" : "institution",
-        expiresIn: SESSION_LIFETIME / 1000
-      });
-
-    } catch (error) {
-      console.error("Authentication error:", error.message);
-
-      return res.status(401).json({
+    if (
+      typeof challengeId !== "string" ||
+      typeof signature !== "string" ||
+      !/^0x[a-fA-F0-9]{130}$/.test(signature)
+    ) {
+      return res.status(400).json({
         success: false,
-        error: "Wallet authentication could not be completed."
+        error: "Invalid authentication request."
       });
     }
+
+    const challenge = challenges.get(challengeId);
+
+    if (!challenge || challenge.expiresAt < Date.now()) {
+      challenges.delete(challengeId);
+      return res.status(401).json({
+        success: false,
+        error: "Challenge expired or already used. Reconnect your wallet."
+      });
+    }
+
+    // Consume the challenge before further verification.
+    challenges.delete(challengeId);
+
+    const recoveredAddress = ethers.verifyMessage(
+      challenge.message,
+      signature
+    );
+
+    if (
+      recoveredAddress.toLowerCase() !==
+      challenge.address.toLowerCase()
+    ) {
+      return res.status(401).json({
+        success: false,
+        error: "Wallet signature verification failed."
+      });
+    }
+
+    const network = await provider.getNetwork();
+
+    if (network.chainId !== SEPOLIA_CHAIN_ID) {
+      throw new Error("Backend is connected to the wrong network.");
+    }
+
+    const ownerAddress = await contract.owner();
+
+    const isOwner =
+      recoveredAddress.toLowerCase() === ownerAddress.toLowerCase();
+
+    const isInstitution = await contract.authorizedInstitutions(
+      recoveredAddress
+    );
+
+    if (!isOwner && !isInstitution) {
+      return res.status(403).json({
+        success: false,
+        error: "This wallet is not authorized to register certificates."
+      });
+    }
+
+    const token = crypto.randomBytes(48).toString("hex");
+
+    sessions.set(token, {
+      address: ethers.getAddress(recoveredAddress),
+      isOwner,
+      expiresAt: Date.now() + SESSION_LIFETIME
+    });
+
+    return res.json({
+      success: true,
+      token,
+      address: ethers.getAddress(recoveredAddress),
+      role: isOwner ? "administrator" : "institution",
+      expiresIn: SESSION_LIFETIME / 1000
+    });
+  } catch (error) {
+    console.error("Authentication error:", error.message);
+    return res.status(401).json({
+      success: false,
+      error: "Wallet authentication could not be completed."
+    });
   }
-);
+});
 
 // --------------------------------------------------
 // AUTHENTICATION MIDDLEWARE
@@ -393,7 +339,6 @@ function requireAuthorization(req, res, next) {
 
   if (!session || session.expiresAt < Date.now()) {
     sessions.delete(token);
-
     return res.status(401).json({
       success: false,
       error: "Session expired. Reconnect your wallet."
@@ -410,12 +355,10 @@ function requireAuthorization(req, res, next) {
 
 const upload = multer({
   storage: multer.memoryStorage(),
-
   limits: {
     fileSize: 10 * 1024 * 1024,
     files: 1
   },
-
   fileFilter(req, file, callback) {
     const allowed = [
       "application/pdf",
@@ -470,14 +413,24 @@ function sanitizeFilename(name) {
 // SERVER HEALTH CHECK
 // --------------------------------------------------
 
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "CertiChain secured server is running.",
-    network: "Ethereum Sepolia",
-    database: "connected",
-    publicVerification: true
-  });
+app.get("/", async (req, res) => {
+  try {
+    await db.query("SELECT 1");
+    return res.json({
+      success: true,
+      message: "CertiChain secured server is running.",
+      network: "Ethereum Sepolia",
+      database: "connected",
+      databaseType: "Neon PostgreSQL",
+      publicVerification: true
+    });
+  } catch (error) {
+    console.error("Health check database error:", error.message);
+    return res.status(503).json({
+      success: false,
+      message: "CertiChain server is running, but the database is unavailable."
+    });
+  }
 });
 
 // --------------------------------------------------
@@ -498,21 +451,14 @@ app.post(
         });
       }
 
-      if (
-        !validateFileContent(
-          req.file.buffer,
-          req.file.mimetype
-        )
-      ) {
+      if (!validateFileContent(req.file.buffer, req.file.mimetype)) {
         return res.status(400).json({
           success: false,
           error: "File content does not match its declared type."
         });
       }
 
-      const safeName = sanitizeFilename(
-        req.file.originalname
-      );
+      const safeName = sanitizeFilename(req.file.originalname);
 
       const file = new File(
         [req.file.buffer],
@@ -528,10 +474,8 @@ app.post(
         cid: result.cid,
         name: safeName
       });
-
     } catch (error) {
       console.error("Upload error:", error.message);
-
       return res.status(500).json({
         success: false,
         error: "Certificate upload failed."
@@ -549,44 +493,33 @@ async function verifyRegistrationTransaction({
   issuer,
   transactionHash
 }) {
-  const receipt = await provider.getTransactionReceipt(
-    transactionHash
-  );
+  const receipt = await provider.getTransactionReceipt(transactionHash);
 
   if (!receipt || receipt.status !== 1) {
     throw new Error("Registration transaction is not confirmed.");
   }
 
   if (
-    receipt.to?.toLowerCase() !==
-    CONTRACT_ADDRESS.toLowerCase()
+    receipt.to?.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()
   ) {
     throw new Error("Transaction does not target the CertiChain contract.");
   }
 
-  if (
-    receipt.from.toLowerCase() !== issuer.toLowerCase()
-  ) {
+  if (receipt.from.toLowerCase() !== issuer.toLowerCase()) {
     throw new Error("Transaction issuer does not match the metadata issuer.");
   }
 
-  const transaction = await provider.getTransaction(
-    transactionHash
-  );
+  const transaction = await provider.getTransaction(transactionHash);
 
   if (!transaction || transaction.chainId !== SEPOLIA_CHAIN_ID) {
     throw new Error("Transaction is not on Ethereum Sepolia.");
   }
 
   const iface = new ethers.Interface(ABI);
-
   let matchingEvent = null;
 
   for (const log of receipt.logs) {
-    if (
-      log.address.toLowerCase() !==
-      CONTRACT_ADDRESS.toLowerCase()
-    ) {
+    if (log.address.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
       continue;
     }
 
@@ -596,10 +529,8 @@ async function verifyRegistrationTransaction({
       if (
         parsed &&
         parsed.name === "CertificateRegistered" &&
-        parsed.args.documentHash.toLowerCase() ===
-          documentHash.toLowerCase() &&
-        parsed.args.issuer.toLowerCase() ===
-          issuer.toLowerCase()
+        parsed.args.documentHash.toLowerCase() === documentHash.toLowerCase() &&
+        parsed.args.issuer.toLowerCase() === issuer.toLowerCase()
       ) {
         matchingEvent = parsed;
         break;
@@ -639,97 +570,119 @@ async function verifyRegistrationTransaction({
 // PROTECTED METADATA SAVE
 // --------------------------------------------------
 
-app.post(
-  "/api/metadata",
-  requireAuthorization,
-  async (req, res) => {
+app.post("/api/metadata", requireAuthorization, async (req, res) => {
+  try {
+    const {
+      documentHash,
+      ipfsCid,
+      fileName,
+      issuer,
+      transactionHash
+    } = req.body || {};
+
+    if (
+      typeof documentHash !== "string" ||
+      !/^0x[a-fA-F0-9]{64}$/.test(documentHash) ||
+      typeof ipfsCid !== "string" ||
+      !/^[a-zA-Z0-9]{20,100}$/.test(ipfsCid) ||
+      typeof fileName !== "string" ||
+      !fileName.trim() ||
+      typeof issuer !== "string" ||
+      !ethers.isAddress(issuer) ||
+      typeof transactionHash !== "string" ||
+      !/^0x[a-fA-F0-9]{64}$/.test(transactionHash)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing or invalid certificate metadata."
+      });
+    }
+
+    const normalizedIssuer = ethers.getAddress(issuer);
+
+    if (
+      normalizedIssuer.toLowerCase() !==
+      req.wallet.address.toLowerCase()
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: "Issuer does not match the authenticated wallet."
+      });
+    }
+
+    const normalizedHash = documentHash.toLowerCase();
+
+    const existing = await db.query(
+      `SELECT document_hash
+       FROM certificates
+       WHERE lower(document_hash) = lower($1)
+       LIMIT 1`,
+      [normalizedHash]
+    );
+
+    if (existing.rowCount > 0) {
+      return res.status(409).json({
+        success: false,
+        error: "Metadata already exists for this certificate."
+      });
+    }
+
+    const registeredAt = await verifyRegistrationTransaction({
+      documentHash,
+      issuer: normalizedIssuer,
+      transactionHash
+    });
+
     try {
-      const {
-        documentHash,
-        ipfsCid,
-        fileName,
-        issuer,
-        transactionHash
-      } = req.body || {};
-
-      if (
-        typeof documentHash !== "string" ||
-        !/^0x[a-fA-F0-9]{64}$/.test(documentHash) ||
-        typeof ipfsCid !== "string" ||
-        !/^[a-zA-Z0-9]{20,100}$/.test(ipfsCid) ||
-        typeof fileName !== "string" ||
-        !fileName.trim() ||
-        typeof issuer !== "string" ||
-        !ethers.isAddress(issuer) ||
-        typeof transactionHash !== "string" ||
-        !/^0x[a-fA-F0-9]{64}$/.test(transactionHash)
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: "Missing or invalid certificate metadata."
-        });
-      }
-
-      const normalizedIssuer = ethers.getAddress(issuer);
-
-      if (
-        normalizedIssuer.toLowerCase() !==
-        req.wallet.address.toLowerCase()
-      ) {
-        return res.status(403).json({
-          success: false,
-          error: "Issuer does not match the authenticated wallet."
-        });
-      }
-
-      const existing = findMetadata.get(documentHash);
-
-      if (existing) {
+      await db.query(
+        `INSERT INTO certificates (
+          document_hash,
+          ipfs_cid,
+          file_name,
+          issuer,
+          transaction_hash,
+          registered_at
+        ) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          normalizedHash,
+          ipfsCid,
+          sanitizeFilename(fileName),
+          normalizedIssuer,
+          transactionHash.toLowerCase(),
+          registeredAt
+        ]
+      );
+    } catch (insertError) {
+      if (insertError.code === "23505") {
         return res.status(409).json({
           success: false,
           error: "Metadata already exists for this certificate."
         });
       }
-
-      const registeredAt = await verifyRegistrationTransaction({
-        documentHash,
-        issuer: normalizedIssuer,
-        transactionHash
-      });
-
-      saveMetadata.run({
-        documentHash: documentHash.toLowerCase(),
-        ipfsCid,
-        fileName: sanitizeFilename(fileName),
-        issuer: normalizedIssuer,
-        transactionHash: transactionHash.toLowerCase(),
-        registeredAt
-      });
-
-      return res.status(201).json({
-        success: true,
-        message: "Verified certificate metadata saved successfully.",
-        documentHash: documentHash.toLowerCase(),
-        ipfsCid,
-        registeredAt
-      });
-
-    } catch (error) {
-      console.error("Metadata save error:", error.message);
-
-      return res.status(400).json({
-        success: false,
-        error: error.message || "Could not save certificate metadata."
-      });
+      throw insertError;
     }
+
+    return res.status(201).json({
+      success: true,
+      message: "Verified certificate metadata saved successfully.",
+      documentHash: normalizedHash,
+      ipfsCid,
+      registeredAt
+    });
+  } catch (error) {
+    console.error("Metadata save error:", error.message);
+    return res.status(400).json({
+      success: false,
+      error: error.message || "Could not save certificate metadata."
+    });
   }
-);
+});
 
 // --------------------------------------------------
 // PUBLIC METADATA RETRIEVAL
 // --------------------------------------------------
 
-app.get("/api/metadata/:hash", (req, res) => {
+app.get("/api/metadata/:hash", async (req, res) => {
   try {
     const hash = req.params.hash;
 
@@ -740,9 +693,21 @@ app.get("/api/metadata/:hash", (req, res) => {
       });
     }
 
-    const metadata = getMetadata.get(hash);
+    const result = await db.query(
+      `SELECT
+        document_hash AS "documentHash",
+        ipfs_cid AS "ipfsCid",
+        file_name AS "fileName",
+        issuer,
+        transaction_hash AS "transactionHash",
+        registered_at AS "registeredAt"
+      FROM certificates
+      WHERE lower(document_hash) = lower($1)
+      LIMIT 1`,
+      [hash]
+    );
 
-    if (!metadata) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "No saved metadata found for this certificate."
@@ -751,12 +716,10 @@ app.get("/api/metadata/:hash", (req, res) => {
 
     return res.json({
       success: true,
-      metadata
+      metadata: result.rows[0]
     });
-
   } catch (error) {
     console.error("Metadata retrieval error:", error.message);
-
     return res.status(500).json({
       success: false,
       error: "Could not retrieve certificate metadata."
@@ -785,17 +748,34 @@ app.use((error, req, res, next) => {
 });
 
 // --------------------------------------------------
-// START SERVER
+// START SERVER AFTER DATABASE INITIALIZATION
 // --------------------------------------------------
 
-app.listen(PORT, () => {
-  console.log(
-    `CertiChain secured server running on http://localhost:${PORT}`
-  );
+async function startServer() {
+  try {
+    await initializeDatabase();
 
-  console.log("Ethereum network: Sepolia");
-  console.log("SQLite database connected.");
-  console.log("Public certificate verification enabled.");
+    const network = await provider.getNetwork();
+    if (network.chainId !== SEPOLIA_CHAIN_ID) {
+      throw new Error("Configured Ethereum RPC is not connected to Sepolia.");
+    }
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`CertiChain secured server running on port ${PORT}`);
+      console.log("Ethereum network: Sepolia");
+      console.log("Database: Neon PostgreSQL");
+      console.log("Public certificate verification enabled.");
+    });
+  } catch (error) {
+    console.error("CertiChain startup failed:", error);
+    process.exit(1);
+  }
+}
+
+process.on("SIGTERM", async () => {
+  console.log("Shutting down CertiChain server...");
+  await db.end();
+  process.exit(0);
 });
 
-
+startServer();
